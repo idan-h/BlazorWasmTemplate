@@ -62,7 +62,7 @@ public class ClientPreferenceManager : IClientPreferenceManager
             }
             else
             {
-                preference.LanguageCode = "en-EN";
+                preference.LanguageCode = LocalizationConstants.DefaultLanguage;
                 preference.IsRTL = false;
             }
 

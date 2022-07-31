@@ -16,7 +16,7 @@ public partial class BaseLayout
         _themePreference = await ClientPreferences.GetPreference() as ClientPreference;
         if (_themePreference == null) _themePreference = new ClientPreference();
         SetCurrentTheme(_themePreference);
-
+/*
         Snackbar.Add("Like this boilerplate? ", Severity.Normal, config =>
         {
             config.BackgroundBlurred = true;
@@ -29,6 +29,7 @@ public partial class BaseLayout
                 return Task.CompletedTask;
             };
         });
+*/
     }
 
     private async Task ThemePreferenceChanged(ClientPreference themePreference)

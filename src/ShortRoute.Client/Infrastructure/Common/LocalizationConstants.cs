@@ -8,7 +8,9 @@ public static class LocalizationConstants
 
     public static readonly LanguageCode[] SupportedLanguages =
     {
+        new("he-IL", "עברית", true),
         new("en-US", "English"),
+        /*
         new("fr-FR", "French"),
         new("km_KH", "Khmer"),
         new("de-DE", "German"),
@@ -18,7 +20,7 @@ public static class LocalizationConstants
         new("sv-SE", "Swedish"),
         new("id-ID", "Indonesia"),
         new("it-IT", "Italian"),
+        */
         new("ar", "عربي", true),
-        new("he-IL", "עברית", true),
     };
 }
