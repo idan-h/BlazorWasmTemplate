@@ -2,8 +2,6 @@
 
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
-        <RootNamespace>FSH.BlazorWebAssembly.Host</RootNamespace>
-        <AssemblyName>FSH.BlazorWebAssembly.Host</AssemblyName>
     </PropertyGroup>
 
     <ItemGroup>
@@ -11,8 +9,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Client\Client.csproj" />
-        <ProjectReference Include="..\Shared\Shared.csproj" />
+      <ProjectReference Include="..\ShortRoute.Client\ShortRoute.Client.csproj" />
     </ItemGroup>
 
     <ItemGroup>

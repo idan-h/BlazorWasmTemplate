@@ -1,0 +1,42 @@
+﻿@using System.Security.Claims
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Components.Web.Virtualization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using Microsoft.AspNetCore.Components.WebAssembly.Http
+@using Microsoft.AspNetCore.WebUtilities
+@using Microsoft.Extensions.Configuration
+@using Microsoft.Extensions.DependencyInjection
+@using Microsoft.Extensions.Localization
+@using Microsoft.JSInterop
+@using ShortRoute.Client
+@using ShortRoute.Client.Shared
+@using ShortRoute.Client.Pages.Authentication
+@using ShortRoute.Client.Pages.Multitenancy
+@using ShortRoute.Client.Components.Common
+@using ShortRoute.Client.Components.EntityTable
+@using ShortRoute.Client.Components.Localization
+@using ShortRoute.Client.Components.Notifications
+@using ShortRoute.Client.Components.ThemeManager
+@using ShortRoute.Client.Infrastructure.ApiClient
+@using ShortRoute.Client.Infrastructure.Auth
+@using ShortRoute.Client.Infrastructure.Common
+@using ShortRoute.Client.Infrastructure.Notifications
+@using ShortRoute.Client.Infrastructure.Preferences
+@using FSH.WebApi.Shared.Authorization
+@using Blazored.LocalStorage
+@using Mapster
+@using MediatR.Courier
+@using MudBlazor
+
+@attribute [Authorize]
+
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject IConfiguration Config
+@inject IClientPreferenceManager ClientPreferences
