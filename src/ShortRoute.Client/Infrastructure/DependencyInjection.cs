@@ -27,7 +27,7 @@ public static class DependencyInjection
                     configuration.SnackbarConfiguration.VisibleStateDuration = 3000;
                     configuration.SnackbarConfiguration.ShowCloseIcon = false;
                 })
-            .AddScoped<IClientPreferenceManager, ClientPreferenceManager>()
+            .AddSingleton<IClientPreferenceManager, ClientPreferenceManager>()
             .AutoRegisterInterfaces<IAppService>()
             .AutoRegisterInterfaces<IApiService>()
             .AddNotifications()

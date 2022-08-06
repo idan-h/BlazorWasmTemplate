@@ -55,11 +55,11 @@
                     {
                         <MudButton DisableElevation Variant="Variant.Filled" Color="Color.Tertiary"
                             OnClick="(() => ExportAsync())" StartIcon="@Icons.Material.Filled.ImportExport"
-                            Style="margin-left: 5px;" IconColor="Color.Surface">@L["Export"]</MudButton>
+                            Class="ms-1" IconColor="Color.Surface">@L["Export"]</MudButton>
                     }
                     <MudButton DisableElevation Variant="Variant.Filled" OnClick="ReloadDataAsync"
                         StartIcon="@Icons.Material.Filled.Refresh" IconColor="Color.Surface" Color="Color.Secondary"
-                        Style="margin-left: 5px;">@L["Reload"]</MudButton>
+                        Class="ms-1">@L["Reload"]</MudButton>
                 </div>
                 <MudSpacer />
                 @if (_canSearch && !_advancedSearchExpanded)

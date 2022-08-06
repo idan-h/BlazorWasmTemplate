@@ -9,7 +9,7 @@
             <MudAppBar Elevation="0" Style="background:#6e6e6e00!important">
                 <ThemeDrawer @bind-ThemeDrawerOpen="_themeDrawerOpen" ThemePreference="_themePreference"
                     ThemePreferenceChanged="ThemePreferenceChanged" />
-                <ThemeButton OnClick="@(() => _themeDrawerOpen = true)" />
+                <ThemeButton OnClick="@(() => _themeDrawerOpen = true)" RightToLeft="@_rightToLeft" />
             </MudAppBar>
             <MudContainer MaxWidth="MaxWidth.Small" Class="d-flex align-center" Style="height: 100vh;">
                 <MudPaper Elevation="25" Class="pa-8"> 
@@ -22,7 +22,7 @@
                 <MudLayout>
                     <ThemeDrawer @bind-ThemeDrawerOpen="_themeDrawerOpen" ThemePreference="_themePreference"
                         ThemePreferenceChanged="ThemePreferenceChanged" />
-                    <ThemeButton OnClick="@(() => _themeDrawerOpen = true)" />
+                    <ThemeButton OnClick="@(() => _themeDrawerOpen = true)" RightToLeft="@_rightToLeft" />
                     <MainLayout>
                         @Body
                     </MainLayout>

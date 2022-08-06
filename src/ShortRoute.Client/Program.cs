@@ -22,7 +22,7 @@ if (storageService != null)
     if (await storageService.GetPreference() is ClientPreference preference)
         culture = new CultureInfo(preference.LanguageCode);
     else
-        culture = new CultureInfo(LocalizationConstants.SupportedLanguages.FirstOrDefault()?.Code ?? LocalizationConstants.DefaultLanguage);
+        culture = new CultureInfo(LocalizationConstants.SupportedLanguages.FirstOrDefault()?.Code ?? LocalizationConstants.DefaultLanguage.Code);
     CultureInfo.DefaultThreadCurrentCulture = culture;
     CultureInfo.DefaultThreadCurrentUICulture = culture;
 }

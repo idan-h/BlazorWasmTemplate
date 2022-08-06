@@ -16,17 +16,17 @@ else
         {
             var selectedRoleClaimsInGroup = _groupedRoleClaims[group].Where(c => c.Enabled).ToList();
             var allRoleClaimsInGroup = _groupedRoleClaims[group].ToList();
-            <MudTabPanel Text="@group" BadgeData="@($"{selectedRoleClaimsInGroup.Count}/{allRoleClaimsInGroup.Count}")" Style="padding-right: 43px;"
+            <MudTabPanel Text="@group" BadgeData="@($"{selectedRoleClaimsInGroup.Count}/{allRoleClaimsInGroup.Count}")" Style="padding-inline-end: 43px;"
                 BadgeColor="@GetGroupBadgeColor(selectedRoleClaimsInGroup.Count, allRoleClaimsInGroup.Count)">
                 <MudTable Hover="true" Elevation="25" Items="@allRoleClaimsInGroup" Style="margin-bottom:0px!important" Filter="new Func<PermissionViewModel, bool>(Search)">
                     <ToolBarContent>
                         <div class="justify-center mud-text-align-center">
-                            <MudButton Variant="Variant.Filled" Color="Color.Info" Class="ml-auto" StartIcon="@Icons.Material.Filled.ArrowBack" Link="/roles">@L["Back"]
+                            <MudButton Variant="Variant.Filled" Color="Color.Info" Class="ms-auto" StartIcon="@Icons.Material.Filled.ArrowBack" Link="/roles">@L["Back"]
                             </MudButton>
                             @if (_canEditRoleClaims)
                             {
-                                <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" OnClick="SaveAsync"
-                                    ButtonType="ButtonType.Submit" Style="margin-left: 5px!important;" StartIcon="@Icons.Material.Filled.Save">@L["Update Permissions"]
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ms-1" OnClick="SaveAsync"
+                                    ButtonType="ButtonType.Submit" StartIcon="@Icons.Material.Filled.Save">@L["Update Permissions"]
                                 </MudButton>
                             }
                         </div>

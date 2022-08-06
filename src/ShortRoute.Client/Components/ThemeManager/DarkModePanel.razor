@@ -1,4 +1,4 @@
-<MudExpansionPanel HideIcon="true">
+<MudExpansionPanel IsExpandedChanged="OnIsExpandedChanged" IsExpanded="@_isExpanded" HideIcon="true">
     <TitleContent>
         <div class="d-flex" style="align-items: center;">
             @if (_isDarkMode)
@@ -10,8 +10,8 @@
                 <MudText Class="mt-1">Dark Mode</MudText>
             }
             <MudToggleIconButton @bind-Toggled="_isDarkMode" Icon="@Icons.Material.Filled.WbSunny"
-                Color="@Color.Warning" Title="Off" Class="d-flex ml-auto" ToggledIcon="@Icons.Material.Filled.DarkMode"
-                ToggledColor="@Color.Surface" ToggledTitle="On" style="left:8px!important" @onclick="@ToggleDarkMode" />
+                Color="@Color.Warning" Title="Off" Class="d-flex ms-auto" ToggledIcon="@Icons.Material.Filled.DarkMode"
+                ToggledColor="@Color.Surface" ToggledTitle="On" style="@GetButtonStyleByDir()" @onclick="@ToggleDarkMode" />
         </div>
     </TitleContent>
 </MudExpansionPanel>

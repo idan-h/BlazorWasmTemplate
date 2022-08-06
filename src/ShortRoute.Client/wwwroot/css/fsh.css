@@ -54,7 +54,7 @@
 
 .mud-grid-spacing-xs-3 {
     margin: 0px !important;
-    margin-left: -12px !important;
+    /*margin-left: -12px !important;*/
 }
 
 .mud-table-toolbar
@@ -66,7 +66,4 @@
 ::-webkit-scrollbar {
     width: 2px!important;
     height: 6px!important;
-}
-.fsh-nav-child {
-    padding-left: 10px !important;
 }

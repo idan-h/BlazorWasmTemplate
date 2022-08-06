@@ -62,8 +62,8 @@ public class ClientPreferenceManager : IClientPreferenceManager
             }
             else
             {
-                preference.LanguageCode = LocalizationConstants.DefaultLanguage;
-                preference.IsRTL = false;
+                preference.LanguageCode = LocalizationConstants.DefaultLanguage.Code;
+                preference.IsRTL = LocalizationConstants.DefaultLanguage.IsRTL;
             }
 
             await SetPreference(preference);
@@ -75,9 +75,9 @@ public class ClientPreferenceManager : IClientPreferenceManager
 
     public async Task<MudTheme> GetCurrentThemeAsync()
     {
-        if (await GetPreference() is ClientPreference preference)
+        if (await GetPreference() is ClientPreference preference && preference.IsDarkMode)
         {
-            if (preference.IsDarkMode) return new DarkTheme();
+            return new DarkTheme();
         }
 
         return new LightTheme();
@@ -123,15 +123,15 @@ public class ClientPreferenceManager : IClientPreferenceManager
         return false;
     }
 
-    public static string Preference = "clientPreference";
+    public const string PerferenceStorageName = "clientPreference";
 
-    public async Task<IPreference> GetPreference()
+    public async Task<ClientPreference> GetPreference()
     {
-        return await _localStorageService.GetItemAsync<ClientPreference>(Preference) ?? new ClientPreference();
+        return await _localStorageService.GetItemAsync<ClientPreference>(PerferenceStorageName) ?? new ClientPreference();
     }
 
-    public async Task SetPreference(IPreference preference)
+    public async Task SetPreference(ClientPreference preference)
     {
-        await _localStorageService.SetItemAsync(Preference, preference as ClientPreference);
+        await _localStorageService.SetItemAsync(PerferenceStorageName, preference);
     }
 }

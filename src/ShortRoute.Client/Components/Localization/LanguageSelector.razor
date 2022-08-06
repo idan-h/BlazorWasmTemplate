@@ -18,7 +18,7 @@
 </MudTooltip>
 
 @code {
-    public string? CurrentLanguage { get; set; } = LocalizationConstants.DefaultLanguage;
+    public string? CurrentLanguage { get; set; } = LocalizationConstants.DefaultLanguage.Code;
 
     protected override async Task OnInitializedAsync()
     {
@@ -29,7 +29,7 @@
         }
         else
         {
-            CurrentLanguage = LocalizationConstants.DefaultLanguage;
+            CurrentLanguage = LocalizationConstants.DefaultLanguage.Code;
         }
 
     }

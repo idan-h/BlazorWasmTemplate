@@ -2,9 +2,9 @@
 
 public interface IPreferenceManager : IAppService
 {
-    Task SetPreference(IPreference preference);
+    Task SetPreference(ClientPreference preference);
 
-    Task<IPreference> GetPreference();
+    Task<ClientPreference> GetPreference();
 
     Task<bool> ChangeLanguageAsync(string languageCode);
 }

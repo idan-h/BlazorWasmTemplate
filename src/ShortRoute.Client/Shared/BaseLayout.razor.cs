@@ -13,8 +13,7 @@ public partial class BaseLayout
 
     protected override async Task OnInitializedAsync()
     {
-        _themePreference = await ClientPreferences.GetPreference() as ClientPreference;
-        if (_themePreference == null) _themePreference = new ClientPreference();
+        _themePreference = await ClientPreferences.GetPreference() ?? new ClientPreference();
         SetCurrentTheme(_themePreference);
 /*
         Snackbar.Add("Like this boilerplate? ", Severity.Normal, config =>

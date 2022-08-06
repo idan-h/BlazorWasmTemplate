@@ -4,7 +4,7 @@ public record LanguageCode(string Code, string DisplayName, bool IsRTL = false);
 
 public static class LocalizationConstants
 {
-    public const string DefaultLanguage = "he-IL";
+    public static LanguageCode DefaultLanguage => SupportedLanguages[0];
 
     public static readonly LanguageCode[] SupportedLanguages =
     {

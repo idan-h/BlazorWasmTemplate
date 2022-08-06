@@ -6,11 +6,14 @@ namespace ShortRoute.Client.Components.ThemeManager;
 public partial class DarkModePanel
 {
     private bool _isDarkMode;
+    private bool _isRTL;
+    private bool _isExpanded;
 
     protected override async Task OnInitializedAsync()
     {
         if (await ClientPreferences.GetPreference() is not ClientPreference themePreference) themePreference = new ClientPreference();
         _isDarkMode = themePreference.IsDarkMode;
+        _isRTL = themePreference.IsRTL;
     }
 
     [Parameter]
@@ -20,5 +23,15 @@ public partial class DarkModePanel
     {
         _isDarkMode = !_isDarkMode;
         await OnIconClicked.InvokeAsync(_isDarkMode);
+    }
+
+    private string GetButtonStyleByDir()
+    {
+        return $"{(_isRTL ? "right" : "left")}:8px!important";
+    }
+
+    private void OnIsExpandedChanged()
+    {
+        _isExpanded = false;
     }
 }

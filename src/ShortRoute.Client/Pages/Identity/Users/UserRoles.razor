@@ -14,13 +14,13 @@ else
     <MudTable Hover="true" Elevation="25" Items="_userRolesList" Filter="new Func<UserRoleDto, bool>(Search)">
         <ToolBarContent>
             <div class="justify-center mud-text-align-center">
-                <MudButton Variant="Variant.Filled" Color="Color.Info" Class="ml-auto" StartIcon="@Icons.Material.Filled.ArrowBack" Link="/users">
+                <MudButton Variant="Variant.Filled" Color="Color.Info" Class="ms-auto" StartIcon="@Icons.Material.Filled.ArrowBack" Link="/users">
                     @L["Back"]
                 </MudButton>
                 @if (_canEditUsers)
                 {
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" OnClick="SaveAsync" StartIcon="@Icons.Material.Filled.Save"
-                        ButtonType="ButtonType.Submit" Style="margin-left: 5px!important;">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ms-1" OnClick="SaveAsync" StartIcon="@Icons.Material.Filled.Save"
+                        ButtonType="ButtonType.Submit">
                         @L["Update"]
                     </MudButton>
                 }
