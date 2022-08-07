@@ -67,3 +67,15 @@
     width: 2px!important;
     height: 6px!important;
 }
+
+[dir="rtl"] .reverse-child-svg-when-rtl > * svg {
+    transform: scaleX(-1);
+}
+
+[dir="rtl"] .mud-badge.mud-badge-top.right {
+    inset: auto calc(100% - 4px) calc(100% - 4px) auto !important;
+    top: auto !important;
+    right: calc(100% - 4px) !important;
+    bottom: calc(100% - 4px) !important;
+    left: auto !important;
+}
