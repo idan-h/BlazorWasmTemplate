@@ -6,7 +6,7 @@
 <MudDialog>
     <TitleContent>
         <MudText Typo="Typo.h6">
-            <MudIcon Icon="@Icons.Material.Filled.Logout" Class="me-3 mb-n1" />
+            <MudIcon Icon="@Icons.Material.Filled.Logout" Class="me-3 mb-n1 reverse-when-rtl" />
             @L["Logout Confirmation"]
         </MudText>
     </TitleContent>
@@ -15,7 +15,7 @@
     </DialogContent>
     <DialogActions>
         <MudButton StartIcon="@Icons.Filled.Cancel" OnClick="Cancel">@L["Cancel"]</MudButton>
-        <MudButton StartIcon="@Icons.Filled.Logout" Color="@Color" Variant="Variant.Filled" OnClick="Submit">@ButtonText</MudButton>
+        <MudButton StartIcon="@Icons.Filled.Logout" Class="reverse-child-svg-when-rtl" Color="@Color" Variant="Variant.Filled" OnClick="Submit">@ButtonText</MudButton>
     </DialogActions>
 </MudDialog>
 

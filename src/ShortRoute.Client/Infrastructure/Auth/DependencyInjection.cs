@@ -6,7 +6,7 @@ using ShortRoute.Client.Infrastructure.Auth.Jwt;
 
 namespace ShortRoute.Client.Infrastructure.Auth;
 
-internal static class Startup
+internal static class DependencyInjection
 {
     public static IServiceCollection AddAuthentication(this IServiceCollection services, IConfiguration config) =>
         config[nameof(AuthProvider)] switch

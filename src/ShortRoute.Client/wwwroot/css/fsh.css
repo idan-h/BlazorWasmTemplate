@@ -72,6 +72,10 @@
     transform: scaleX(-1);
 }
 
+[dir="rtl"] .reverse-when-rtl {
+    transform: scaleX(-1);
+}
+
 [dir="rtl"] .mud-badge.mud-badge-top.right {
     inset: auto calc(100% - 4px) calc(100% - 4px) auto !important;
     top: auto !important;
