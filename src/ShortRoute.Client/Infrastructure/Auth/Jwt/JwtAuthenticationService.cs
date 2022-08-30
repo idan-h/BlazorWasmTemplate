@@ -1,7 +1,12 @@
 ﻿using ShortRoute.Client.Infrastructure.ApiClient;
-using FSH.WebApi.Shared.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
+using ShortRoute.Client.Infrastructure.ApiClient.v1;
+using ShortRoute.Contracts.Commands.Authentication;
+using ShortRoute.Contracts.Responses.Authentication;
+using ShortRoute.Client.Infrastructure.Auth.Extensions;
+using ShortRoute.Client.Infrastructure.Auth.Enums;
+using ShortRoute.Contracts.Auth;
 
 namespace ShortRoute.Client.Infrastructure.Auth.Jwt;
 
@@ -10,17 +15,15 @@ public class JwtAuthenticationService : AuthenticationStateProvider, IAuthentica
     private readonly SemaphoreSlim _semaphore = new(1, 1);
 
     private readonly ILocalStorageService _localStorage;
-    private readonly ITokensClient _tokensClient;
-    private readonly IPersonalClient _personalClient;
+    private readonly IAuthClient _authClient;
     private readonly NavigationManager _navigation;
 
     public AuthProvider ProviderType => AuthProvider.Jwt;
 
-    public JwtAuthenticationService(ILocalStorageService localStorage, IPersonalClient personalClient, ITokensClient tokensClient, NavigationManager navigation)
+    public JwtAuthenticationService(ILocalStorageService localStorage, IAuthClient authClient, NavigationManager navigation)
     {
         _localStorage = localStorage;
-        _personalClient = personalClient;
-        _tokensClient = tokensClient;
+        _authClient = authClient;
         _navigation = navigation;
     }
 
@@ -38,7 +41,7 @@ public class JwtAuthenticationService : AuthenticationStateProvider, IAuthentica
         // Add cached permissions as claims
         if (await GetCachedPermissionsAsync() is List<string> cachedPermissions)
         {
-            claimsIdentity.AddClaims(cachedPermissions.Select(p => new Claim(FSHClaims.Permission, p)));
+            claimsIdentity.AddClaims(cachedPermissions.Select(p => new Claim(AuthClaimTypes.Permission, p)));
         }
 
         return new AuthenticationState(new ClaimsPrincipal(claimsIdentity));
@@ -47,22 +50,39 @@ public class JwtAuthenticationService : AuthenticationStateProvider, IAuthentica
     public void NavigateToExternalLogin(string returnUrl) =>
         throw new NotImplementedException();
 
-    public async Task<bool> LoginAsync(string tenantId, TokenRequest request)
+    public async Task<bool> LoginAsync(AuthenticateCommand command)
     {
-        var tokenResponse = await _tokensClient.GetTokenAsync(tenantId, request);
+        var authResponse = await _authClient.Authenticate(command);
 
-        string? token = tokenResponse.Token;
-        string? refreshToken = tokenResponse.RefreshToken;
-
-        if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(refreshToken))
+        if (!authResponse.IsSuccessStatusCode)
         {
             return false;
         }
 
-        await CacheAuthTokens(token, refreshToken);
+        var authData = authResponse.Content;
+
+        if (string.IsNullOrWhiteSpace(authData.Token))
+        {
+            return false;
+        }
+
+        await CacheAuthTokens(authData);
 
         // Get permissions for the current user and add them to the cache
-        var permissions = await _personalClient.GetPermissionsAsync();
+        var permissionsResponse = await _authClient.UserPermissions();
+
+        if (!permissionsResponse.IsSuccessStatusCode)
+        {
+            return false;
+        }
+
+        var permissions = permissionsResponse.Content;
+
+        if (permissions.Contains("AccessAll"))
+        {
+            permissions = Permissions.All;
+        }
+
         await CachePermissions(permissions);
 
         NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
@@ -72,6 +92,7 @@ public class JwtAuthenticationService : AuthenticationStateProvider, IAuthentica
 
     public async Task LogoutAsync()
     {
+        await _authClient.Logout();
         await ClearCacheAsync();
 
         NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
@@ -97,15 +118,14 @@ public class JwtAuthenticationService : AuthenticationStateProvider, IAuthentica
         await _semaphore.WaitAsync();
         try
         {
-            string? token = await GetCachedAuthTokenAsync();
+            var token = await GetCachedAuthTokenAsync();
+            var tokenExpiration = await GetCachedAuthTokenExpirationAsync();
 
-            // Check if token needs to be refreshed (when its expiration time is less than 1 minute away)
-            var expTime = authState.User.GetExpiration();
-            var diff = expTime - DateTime.UtcNow;
-            if (diff.TotalMinutes <= 1)
+            var diff = DateTimeOffset.FromUnixTimeSeconds(tokenExpiration) - DateTimeOffset.UtcNow;
+            if (diff.TotalSeconds <= 10)
             {
-                string? refreshToken = await GetCachedRefreshTokenAsync();
-                (bool succeeded, var response) = await TryRefreshTokenAsync(new RefreshTokenRequest { Token = token, RefreshToken = refreshToken });
+                // string? refreshToken = await GetCachedRefreshTokenAsync();
+                (bool succeeded, var response) = await TryRefreshTokenAsync(new() { Token = token });
                 if (!succeeded)
                 {
                     return new AccessTokenResult(AccessTokenResultStatus.RequiresRedirect, null, "/login");
@@ -125,33 +145,42 @@ public class JwtAuthenticationService : AuthenticationStateProvider, IAuthentica
     public ValueTask<AccessTokenResult> RequestAccessToken(AccessTokenRequestOptions options) =>
         RequestAccessToken();
 
-    private async Task<(bool Succeeded, TokenResponse? Token)> TryRefreshTokenAsync(RefreshTokenRequest request)
+    private async Task<(bool Succeeded, AuthenticateResponse? Token)> TryRefreshTokenAsync(RefreshAuthenticationCommand command)
     {
         var authState = await GetAuthenticationStateAsync();
-        string? tenantKey = authState.User.GetTenant();
-        if (string.IsNullOrWhiteSpace(tenantKey))
+        var userId = authState.User.GetUserId();
+        if (string.IsNullOrWhiteSpace(userId))
         {
             throw new InvalidOperationException("Can't refresh token when user is not logged in!");
         }
 
-        try
-        {
-            var tokenResponse = await _tokensClient.RefreshAsync(tenantKey, request);
-
-            await CacheAuthTokens(tokenResponse.Token, tokenResponse.RefreshToken);
-
-            return (true, tokenResponse);
-        }
-        catch (ApiException<ErrorResult>)
+        var refreshTokenExpiration = await GetCachedRefreshTokenExpirationAsync();
+        var diff = DateTimeOffset.FromUnixTimeSeconds(refreshTokenExpiration) - DateTimeOffset.UtcNow;
+        if (diff.TotalMinutes <= 1)
         {
             return (false, null);
         }
+
+        var response = await _authClient.RefreshAuthentication(command);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            return (false, null);
+        }
+
+        var authData = response.Content;
+
+        await CacheAuthTokens(authData);
+
+        return (true, authData);
     }
 
-    private async ValueTask CacheAuthTokens(string? token, string? refreshToken)
+    private async ValueTask CacheAuthTokens(AuthenticateResponse response)
     {
-        await _localStorage.SetItemAsync(StorageConstants.Local.AuthToken, token);
-        await _localStorage.SetItemAsync(StorageConstants.Local.RefreshToken, refreshToken);
+        await _localStorage.SetItemAsync(StorageConstants.Local.AuthToken, response.Token);
+        //await _localStorage.SetItemAsync(StorageConstants.Local.RefreshToken, response.RefreshToken);
+        await _localStorage.SetItemAsync(StorageConstants.Local.AuthTokenExpiration, response.TokenExpiration);
+        await _localStorage.SetItemAsync(StorageConstants.Local.RefreshTokenExpiration, response.RefreshTokenExpiration);
     }
 
     private ValueTask CachePermissions(ICollection<string> permissions) =>
@@ -167,8 +196,14 @@ public class JwtAuthenticationService : AuthenticationStateProvider, IAuthentica
     private ValueTask<string> GetCachedAuthTokenAsync() =>
         _localStorage.GetItemAsync<string>(StorageConstants.Local.AuthToken);
 
+    private ValueTask<long> GetCachedAuthTokenExpirationAsync() =>
+        _localStorage.GetItemAsync<long>(StorageConstants.Local.AuthTokenExpiration);
+
     private ValueTask<string> GetCachedRefreshTokenAsync() =>
         _localStorage.GetItemAsync<string>(StorageConstants.Local.RefreshToken);
+
+    private ValueTask<long> GetCachedRefreshTokenExpirationAsync() =>
+        _localStorage.GetItemAsync<long>(StorageConstants.Local.RefreshTokenExpiration);
 
     private ValueTask<ICollection<string>> GetCachedPermissionsAsync() =>
         _localStorage.GetItemAsync<ICollection<string>>(StorageConstants.Local.Permissions);

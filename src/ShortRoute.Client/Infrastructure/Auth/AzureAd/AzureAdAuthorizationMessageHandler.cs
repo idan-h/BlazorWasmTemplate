@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
+using ShortRoute.Client.Infrastructure.Auth.Enums;
 
 namespace ShortRoute.Client.Infrastructure.Auth.AzureAd;
 

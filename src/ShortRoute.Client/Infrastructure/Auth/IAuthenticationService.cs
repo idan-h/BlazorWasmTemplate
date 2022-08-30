@@ -1,4 +1,6 @@
 using ShortRoute.Client.Infrastructure.ApiClient;
+using ShortRoute.Client.Infrastructure.Auth.Enums;
+using ShortRoute.Contracts.Commands.Authentication;
 
 namespace ShortRoute.Client.Infrastructure.Auth;
 
@@ -8,7 +10,7 @@ public interface IAuthenticationService
 
     void NavigateToExternalLogin(string returnUrl);
 
-    Task<bool> LoginAsync(string tenantId, TokenRequest request);
+    Task<bool> LoginAsync(AuthenticateCommand command);
 
     Task LogoutAsync();
 

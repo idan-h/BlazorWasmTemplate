@@ -1,11 +1,13 @@
 ﻿using ShortRoute.Client.Infrastructure.ApiClient;
 using ShortRoute.Client.Infrastructure.Common;
 using ShortRoute.Client.Shared;
-using FSH.WebApi.Shared.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
-using ShortRoute.Client.Infrastructure.Auth;
+using ShortRoute.Client.Infrastructure.Auth.Extensions;
+using ShortRoute.Client.Infrastructure.ApiClient.v1;
+using ShortRoute.Contracts.Dtos.Authentication;
+using ShortRoute.Contracts.Auth;
 
 namespace ShortRoute.Client.Pages.Identity.Users;
 
@@ -38,8 +40,8 @@ public partial class UserProfile
 
     private async Task ToggleUserStatus()
     {
-        var request = new ToggleUserStatusRequest { ActivateUser = _active, UserId = Id };
-        await ApiHelper.ExecuteCallGuardedAsync(() => UsersClient.ToggleStatusAsync(Id, request), Snackbar);
+        //var request = new ToggleUserStatusRequest { ActivateUser = _active, UserId = Id };
+        //await ApiHelper.ExecuteClientCall(() => UsersClient.ToggleStatusAsync(Id, request), Snackbar);
         Navigation.NavigateTo("/users");
     }
 
@@ -48,17 +50,11 @@ public partial class UserProfile
 
     protected override async Task OnInitializedAsync()
     {
-        if (await ApiHelper.ExecuteCallGuardedAsync(
-                () => UsersClient.GetByIdAsync(Id), Snackbar)
-            is UserDetailsDto user)
+        if (await ApiHelper.ExecuteClientCall(() => UsersClient.UsersGetSingle(Id!), Snackbar) is UserDto user)
         {
-            _firstName = user.FirstName;
-            _lastName = user.LastName;
             _email = user.Email;
-            _phoneNumber = user.PhoneNumber;
-            _active = user.IsActive;
-            _emailConfirmed = user.EmailConfirmed;
-            _imageUrl = string.IsNullOrEmpty(user.ImageUrl) ? string.Empty : (Config[ConfigNames.ApiBaseUrl] + user.ImageUrl);
+
+            //_imageUrl = string.IsNullOrEmpty(user.ImageUrl) ? string.Empty : (Config[ConfigNames.ApiBaseUrl] + user.ImageUrl);
             Title = $"{_firstName} {_lastName}'s {_localizer["Profile"]}";
             Description = _email;
             if (_firstName?.Length > 0)
@@ -68,7 +64,7 @@ public partial class UserProfile
         }
 
         var state = await AuthState;
-        _canToggleUserStatus = await AuthService.HasPermissionAsync(state.User, FSHAction.Update, FSHResource.Users);
+        _canToggleUserStatus = await AuthService.HasPermissionAsync(state.User, Permissions.UserChange);
         _loaded = true;
     }
 }

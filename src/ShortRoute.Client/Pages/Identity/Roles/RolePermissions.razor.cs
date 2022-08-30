@@ -1,14 +1,15 @@
 ﻿using System.Security.Claims;
 using ShortRoute.Client.Infrastructure.ApiClient;
 using ShortRoute.Client.Shared;
-using FSH.WebApi.Shared.Authorization;
-using FSH.WebApi.Shared.Multitenancy;
-using Mapster;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using MudBlazor;
-using ShortRoute.Client.Infrastructure.Auth;
+using ShortRoute.Client.Infrastructure.Auth.Extensions;
+using ShortRoute.Contracts.Dtos.Authentication;
+using ShortRoute.Client.Models;
+using ShortRoute.Client.Infrastructure.ApiClient.v1;
+using ShortRoute.Contracts.Auth;
 
 namespace ShortRoute.Client.Pages.Identity.Roles;
 
@@ -23,7 +24,7 @@ public partial class RolePermissions
     [Inject]
     protected IRolesClient RolesClient { get; set; } = default!;
 
-    private Dictionary<string, List<PermissionViewModel>> _groupedRoleClaims = default!;
+    private Dictionary<string, List<PermissionModel>> _groupedRoleClaims = default!;
 
     public string _title = string.Empty;
     public string _description = string.Empty;
@@ -34,32 +35,26 @@ public partial class RolePermissions
     private bool _canSearchRoleClaims;
     private bool _loaded;
 
-    static RolePermissions() => TypeAdapterConfig<FSHPermission, PermissionViewModel>.NewConfig().MapToConstructor(true);
 
     protected override async Task OnInitializedAsync()
     {
         var state = await AuthState;
-        _canEditRoleClaims = await AuthService.HasPermissionAsync(state.User, FSHAction.Update, FSHResource.RoleClaims);
-        _canSearchRoleClaims = await AuthService.HasPermissionAsync(state.User, FSHAction.View, FSHResource.RoleClaims);
+        _canEditRoleClaims = await AuthService.HasPermissionAsync(state.User, Permissions.RoleChange);
+        _canSearchRoleClaims = await AuthService.HasPermissionAsync(state.User, Permissions.RoleRead);
 
-        if (await ApiHelper.ExecuteCallGuardedAsync(
-                () => RolesClient.GetByIdWithPermissionsAsync(Id), Snackbar)
-            is RoleDto role && role.Permissions is not null)
+        var role = await ApiHelper.ExecuteClientCall(() => RolesClient.RolesGetSingle(Id), Snackbar);
+        var permissions = await ApiHelper.ExecuteClientCall(() => RolesClient.PermissionsGetList(), Snackbar);
+
+        if (permissions is not null && role is not null && role.PermissionNames?.Any() is true)
         {
-            _title = string.Format(L["{0} Permissions"], role.Name);
-            _description = string.Format(L["Manage {0} Role Permissions"], role.Name);
-
-            var permissions = state.User.GetTenant() == MultitenancyConstants.Root.Id
-                ? FSHPermissions.All
-                : FSHPermissions.Admin;
+            _title = string.Format(L["{0} Permissions"], role.RoleName);
+            _description = string.Format(L["Manage {0} Role Permissions"], role.RoleName);
 
             _groupedRoleClaims = permissions
-                .GroupBy(p => p.Resource)
+                .GroupBy(p => p.GroupName!)
                 .ToDictionary(g => g.Key, g => g.Select(p =>
                 {
-                    var permission = p.Adapt<PermissionViewModel>();
-                    permission.Enabled = role.Permissions.Contains(permission.Name);
-                    return permission;
+                    return new PermissionModel(p, role.PermissionNames.Contains(p.PermissionName!));
                 }).ToList());
         }
 
@@ -81,34 +76,28 @@ public partial class RolePermissions
     {
         var allPermissions = _groupedRoleClaims.Values.SelectMany(a => a);
         var selectedPermissions = allPermissions.Where(a => a.Enabled);
-        var request = new UpdateRolePermissionsRequest()
+        var dto = new RoleDto()
         {
-            RoleId = Id,
-            Permissions = selectedPermissions.Where(x => x.Enabled).Select(x => x.Name).ToList(),
+            RoleName = Id,
+            PermissionNames = selectedPermissions.Where(x => x.Enabled).Select(x => x.Dto.PermissionName).ToList()!,
         };
 
-        if (await ApiHelper.ExecuteCallGuardedAsync(
-                () => RolesClient.UpdatePermissionsAsync(request.RoleId, request),
-                Snackbar,
-                successMessage: L["Updated Permissions."])
-            is not null)
+        if (await ApiHelper.ExecuteClientCall(
+            () => RolesClient.RolesUpdate(dto),
+            Snackbar,
+            successMessage: L["Updated Permissions."]))
         {
             Navigation.NavigateTo("/roles");
         }
     }
 
-    private bool Search(PermissionViewModel permission) =>
-        string.IsNullOrWhiteSpace(_searchString)
-            || permission.Name.Contains(_searchString, StringComparison.OrdinalIgnoreCase) is true
-            || permission.Description.Contains(_searchString, StringComparison.OrdinalIgnoreCase) is true;
-}
-
-public record PermissionViewModel : FSHPermission
-{
-    public bool Enabled { get; set; }
-
-    public PermissionViewModel(string Description, string Action, string Resource, bool IsBasic = false, bool IsRoot = false)
-        : base(Description, Action, Resource, IsBasic, IsRoot)
+    private bool Search(PermissionModel permission)
     {
+        var permissionDto = permission.Dto;
+
+        return string.IsNullOrWhiteSpace(_searchString)
+            || permissionDto.PermissionName?.Contains(_searchString, StringComparison.OrdinalIgnoreCase) is true
+            || permissionDto.Description?.Contains(_searchString, StringComparison.OrdinalIgnoreCase) is true
+            || permissionDto.GroupName?.Contains(_searchString, StringComparison.OrdinalIgnoreCase) is true;
     }
 }

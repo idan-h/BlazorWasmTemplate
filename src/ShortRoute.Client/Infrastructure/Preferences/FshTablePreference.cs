@@ -1,8 +1,7 @@
-using FSH.WebApi.Shared.Notifications;
 
 namespace ShortRoute.Client.Infrastructure.Preferences;
 
-public class FshTablePreference : INotificationMessage
+public class FshTablePreference
 {
     public bool IsDense { get; set; }
     public bool IsStriped { get; set; }

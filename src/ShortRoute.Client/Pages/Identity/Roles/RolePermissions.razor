@@ -1,5 +1,6 @@
 ﻿@page "/roles/{Id}/permissions"
-@attribute [MustHavePermission(FSHAction.View, FSHResource.RoleClaims)]
+@using ShortRoute.Client.Models
+@attribute [Authorize(Permissions.RoleRead)]
 
 @inject IStringLocalizer<RolePermissions> L
 
@@ -18,7 +19,7 @@ else
             var allRoleClaimsInGroup = _groupedRoleClaims[group].ToList();
             <MudTabPanel Text="@group" BadgeData="@($"{selectedRoleClaimsInGroup.Count}/{allRoleClaimsInGroup.Count}")" Style="padding-inline-end: 43px;"
                 BadgeColor="@GetGroupBadgeColor(selectedRoleClaimsInGroup.Count, allRoleClaimsInGroup.Count)">
-                <MudTable Hover="true" Elevation="25" Items="@allRoleClaimsInGroup" Style="margin-bottom:0px!important" Filter="new Func<PermissionViewModel, bool>(Search)">
+                <MudTable Hover="true" Elevation="25" Items="@allRoleClaimsInGroup" Style="margin-bottom:0px!important" Filter="new Func<PermissionModel, bool>(Search)">
                     <ToolBarContent>
                         <div class="justify-center mud-text-align-center">
                             <MudButton Variant="Variant.Filled" Color="Color.Info" Class="ms-auto reverse-child-svg-when-rtl" StartIcon="@Icons.Material.Filled.ArrowBack" Link="/roles">@L["Back"]
@@ -41,24 +42,24 @@ else
                     </ToolBarContent>
                     <HeaderContent>
                         <MudTh>
-                            <MudTableSortLabel SortBy="new Func<PermissionViewModel, object?>(x => x.Name)">
+                            <MudTableSortLabel SortBy="new Func<PermissionModel, object?>(x => x.Dto.PermissionName)">
                                 @L["Permission Name"]</MudTableSortLabel>
                         </MudTh>
                         <MudTh>
-                            <MudTableSortLabel SortBy="new Func<PermissionViewModel, object?>(x => x.Description)">
+                            <MudTableSortLabel SortBy="new Func<PermissionModel, object?>(x => x.Dto.Description)">
                                 @L["Description"]</MudTableSortLabel>
                         </MudTh>
                         <MudTh>
-                            <MudTableSortLabel SortBy="new Func<PermissionViewModel, object>(x => x.Enabled)">@L["Status"]
+                            <MudTableSortLabel SortBy="new Func<PermissionModel, object>(x => x.Enabled)">@L["Status"]
                             </MudTableSortLabel>
                         </MudTh>
                     </HeaderContent>
                     <RowTemplate>
                         <MudTd DataLabel="@L["Permission Name"]">
-                            <MudHighlighter Text="@context.Name" HighlightedText="@_searchString" />
+                            <MudHighlighter Text="@context.Dto.PermissionName" HighlightedText="@_searchString" />
                         </MudTd>
                         <MudTd DataLabel="@L["Description"]">
-                            <MudHighlighter Text="@context.Description" HighlightedText="@_searchString" />
+                            <MudHighlighter Text="@context.Dto.Description" HighlightedText="@_searchString" />
                         </MudTd>
                         <MudTd DataLabel="Permission">
                             <MudCheckBox @bind-Checked="@context.Enabled" Disabled="@(!_canEditRoleClaims)" Color="Color.Secondary">

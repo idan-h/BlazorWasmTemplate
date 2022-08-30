@@ -1,5 +1,5 @@
 ﻿@page "/users/{Id}/profile"
-@attribute [MustHavePermission(FSHAction.View, FSHResource.Users)]
+@attribute [Authorize(Permissions.UserRead)]
 
 @inject IStringLocalizer<UserProfile> _localizer
 

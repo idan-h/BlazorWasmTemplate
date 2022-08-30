@@ -1,7 +1,8 @@
 ﻿using ShortRoute.Client.Infrastructure.ApiClient;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
-using ShortRoute.Client.Infrastructure.Auth;
+using ShortRoute.Client.Infrastructure.Auth.Enums;
+using ShortRoute.Contracts.Commands.Authentication;
 
 namespace ShortRoute.Client.Infrastructure.Auth.AzureAd;
 
@@ -18,7 +19,7 @@ internal class AzureAdAuthenticationService : IAuthenticationService
     public void NavigateToExternalLogin(string returnUrl) =>
         _navigation.NavigateTo($"authentication/login?returnUrl={Uri.EscapeDataString(returnUrl)}");
 
-    public Task<bool> LoginAsync(string tenantId, TokenRequest request) =>
+    public Task<bool> LoginAsync(AuthenticateCommand request) =>
         throw new NotImplementedException();
 
     public async Task LogoutAsync()

@@ -1,11 +1,12 @@
 ﻿using ShortRoute.Client.Components.Common;
 using ShortRoute.Client.Infrastructure.ApiClient;
 using ShortRoute.Client.Shared;
-using FSH.WebApi.Shared.Multitenancy;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using MudBlazor;
 using ShortRoute.Client.Infrastructure.Auth;
+using ShortRoute.Client.Infrastructure.Auth.Enums;
+using ShortRoute.Contracts.Commands.Authentication;
 
 namespace ShortRoute.Client.Pages.Authentication;
 
@@ -20,8 +21,7 @@ public partial class Login
 
     public bool BusySubmitting { get; set; }
 
-    private readonly TokenRequest _tokenRequest = new();
-    private string TenantId { get; set; } = string.Empty;
+    private readonly AuthenticateCommand _tokenRequest = new();
     private bool _passwordVisibility;
     private InputType _passwordInput = InputType.Password;
     private string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
@@ -59,21 +59,21 @@ public partial class Login
 
     private void FillAdministratorCredentials()
     {
-        _tokenRequest.Email = MultitenancyConstants.Root.EmailAddress;
-        _tokenRequest.Password = MultitenancyConstants.DefaultPassword;
-        TenantId = MultitenancyConstants.Root.Id;
+        //_tokenRequest.Email = MultitenancyConstants.Root.EmailAddress;
+        //_tokenRequest.Password = MultitenancyConstants.DefaultPassword;
+        //TenantId = MultitenancyConstants.Root.Id;
     }
 
     private async Task SubmitAsync()
     {
         BusySubmitting = true;
 
-        if (await ApiHelper.ExecuteCallGuardedAsync(
-            () => AuthService.LoginAsync(TenantId, _tokenRequest),
+        if (await ApiHelper.ExecuteClientCall(
+            () => AuthService.LoginAsync(_tokenRequest),
             Snackbar,
             _customValidation))
         {
-            Snackbar.Add($"Logged in as {_tokenRequest.Email}", Severity.Info);
+            Snackbar.Add($"Logged in as {_tokenRequest.User}", Severity.Info);
         }
 
         BusySubmitting = false;

@@ -1,5 +1,7 @@
 ﻿@page "/users/{Id}/roles"
-@attribute [MustHavePermission(FSHAction.View, FSHResource.UserRoles)]
+@using ShortRoute.Client.Models
+@using ShortRoute.Contracts.Dtos.Authentication
+@attribute [Authorize(Permissions.UserRead)]
 
 @inject IStringLocalizer<UserRoles> L
 
@@ -11,7 +13,7 @@
 }
 else
 {
-    <MudTable Hover="true" Elevation="25" Items="_userRolesList" Filter="new Func<UserRoleDto, bool>(Search)">
+    <MudTable Hover="true" Elevation="25" Items="_userRolesList" Filter="new Func<RoleModel, bool>(Search)">
         <ToolBarContent>
             <div class="justify-center mud-text-align-center">
                 <MudButton Variant="Variant.Filled" Color="Color.Info" Class="ms-auto reverse-child-svg-when-rtl" StartIcon="@Icons.Material.Filled.ArrowBack" Link="/users">
@@ -36,24 +38,24 @@ else
         </ToolBarContent>
         <HeaderContent>
             <MudTh>
-                <MudTableSortLabel SortBy="new Func<UserRoleDto, object?>(x => x.RoleName)">@L["Role Name"]
+                <MudTableSortLabel SortBy="new Func<RoleModel, object?>(x => x.Dto.RoleName)">@L["Role Name"]
                 </MudTableSortLabel>
             </MudTh>
             <MudTh>
-                <MudTableSortLabel SortBy="new Func<UserRoleDto, object?>(x => x.Description)">@L["Description"]
+                <MudTableSortLabel SortBy="new Func<RoleModel, object?>(x => x.Dto.Description)">@L["Description"]
                 </MudTableSortLabel>
             </MudTh>
             <MudTh>
-                <MudTableSortLabel SortBy="new Func<UserRoleDto, object>(x => x.Enabled)">@L["Status"]
+                <MudTableSortLabel SortBy="new Func<RoleModel, object>(x => x.Enabled)">@L["Status"]
                 </MudTableSortLabel>
             </MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="@L["Role Name"]">
-                <MudHighlighter Text="@context.RoleName" HighlightedText="@_searchString" />
+                <MudHighlighter Text="@context.Dto.RoleName" HighlightedText="@_searchString" />
             </MudTd>
             <MudTd DataLabel="@L["Description"]">
-                <MudHighlighter Text="@context.Description" HighlightedText="@_searchString" />
+                <MudHighlighter Text="@context.Dto.Description" HighlightedText="@_searchString" />
             </MudTd>
             <MudTd DataLabel="Role">
                 <MudCheckBox @bind-Checked="@context.Enabled" Disabled="@(!_canEditUsers)" Color="Color.Secondary">

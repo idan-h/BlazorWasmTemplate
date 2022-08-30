@@ -1,11 +1,13 @@
 ﻿using ShortRoute.Client.Components.EntityTable;
 using ShortRoute.Client.Infrastructure.ApiClient;
-using FSH.WebApi.Shared.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using MudBlazor;
-using ShortRoute.Client.Infrastructure.Auth;
+using ShortRoute.Client.Infrastructure.Auth.Extensions;
+using ShortRoute.Client.Infrastructure.ApiClient.v1;
+using ShortRoute.Contracts.Dtos.Authentication;
+using ShortRoute.Contracts.Auth;
 
 namespace ShortRoute.Client.Pages.Identity.Users;
 
@@ -19,7 +21,7 @@ public partial class Users
     [Inject]
     protected IUsersClient UsersClient { get; set; } = default!;
 
-    protected EntityClientTableContext<UserDetailsDto, Guid, CreateUserRequest> Context { get; set; } = default!;
+    protected EntityClientTableContext<UserDto, string, UserDto> Context { get; set; } = default!;
 
     private bool _canExportUsers;
     private bool _canViewRoles;
@@ -35,38 +37,29 @@ public partial class Users
     protected override async Task OnInitializedAsync()
     {
         var user = (await AuthState).User;
-        _canExportUsers = await AuthService.HasPermissionAsync(user, FSHAction.Export, FSHResource.Users);
-        _canViewRoles = await AuthService.HasPermissionAsync(user, FSHAction.View, FSHResource.UserRoles);
+        _canExportUsers = await AuthService.HasPermissionAsync(user, Permissions.UserRead);
+        _canViewRoles = await AuthService.HasPermissionAsync(user, Permissions.UserRolesChange);
 
         Context = new(
             entityName: L["User"],
             entityNamePlural: L["Users"],
-            entityResource: FSHResource.Users,
-            searchAction: FSHAction.View,
-            updateAction: string.Empty,
-            deleteAction: string.Empty,
+            searchPermission: Permissions.UserRead,
+            updatePermission: string.Empty,
+            deletePermission: string.Empty,
             fields: new()
             {
-                new(user => user.FirstName, L["First Name"]),
-                new(user => user.LastName, L["Last Name"]),
                 new(user => user.UserName, L["UserName"]),
                 new(user => user.Email, L["Email"]),
-                new(user => user.PhoneNumber, L["PhoneNumber"]),
-                new(user => user.EmailConfirmed, L["Email Confirmation"], Type: typeof(bool)),
-                new(user => user.IsActive, L["Active"], Type: typeof(bool))
             },
-            idFunc: user => user.Id,
-            loadDataFunc: async () => (await UsersClient.GetListAsync()).ToList(),
+            idFunc: user => user.UserId!,
+            loadDataFunc: async () => (await UsersClient.UsersGetList()).Content?.ToList(),
             searchFunc: (searchString, user) =>
                 string.IsNullOrWhiteSpace(searchString)
-                    || user.FirstName?.Contains(searchString, StringComparison.OrdinalIgnoreCase) == true
-                    || user.LastName?.Contains(searchString, StringComparison.OrdinalIgnoreCase) == true
+                    || user.UserName?.Contains(searchString, StringComparison.OrdinalIgnoreCase) == true
                     || user.Email?.Contains(searchString, StringComparison.OrdinalIgnoreCase) == true
-                    || user.PhoneNumber?.Contains(searchString, StringComparison.OrdinalIgnoreCase) == true
                     || user.UserName?.Contains(searchString, StringComparison.OrdinalIgnoreCase) == true,
-            createFunc: user => UsersClient.CreateAsync(user),
             hasExtraActionsFunc: () => true,
-            exportAction: string.Empty);
+            exportPermission: string.Empty);
     }
 
     private void ViewProfile(in Guid userId) =>

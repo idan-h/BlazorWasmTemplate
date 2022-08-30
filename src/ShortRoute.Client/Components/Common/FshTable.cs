@@ -1,8 +1,8 @@
-﻿using ShortRoute.Client.Infrastructure.Notifications;
-using ShortRoute.Client.Infrastructure.Preferences;
-using MediatR.Courier;
+﻿using ShortRoute.Client.Infrastructure.Preferences;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
+using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.Mvvm.Messaging.Messages;
 
 namespace ShortRoute.Client.Components.Common;
 
@@ -10,8 +10,6 @@ public class FshTable<T> : MudTable<T>
 {
     [Inject]
     private IClientPreferenceManager ClientPreferences { get; set; } = default!;
-    [Inject]
-    protected ICourier Courier { get; set; } = default!;
 
     protected override async Task OnInitializedAsync()
     {
@@ -20,10 +18,15 @@ public class FshTable<T> : MudTable<T>
             SetTablePreference(clientPreference.TablePreference);
         }
 
-        Courier.SubscribeWeak<NotificationWrapper<FshTablePreference>>(wrapper =>
+        WeakReferenceMessenger.Default.Register<ValueChangedMessage<FshTablePreference>>(this, (recipient, message) =>
         {
-            SetTablePreference(wrapper.Notification);
-            StateHasChanged();
+            if (recipient is not FshTable<T> table)
+            {
+                return;
+            }
+
+            table.SetTablePreference(message.Value);
+            table.StateHasChanged();
         });
 
         await base.OnInitializedAsync();

@@ -18,16 +18,14 @@
             </MudContainer>
         </NotAuthorized>
         <Authorized>
-            <NotificationConnection>
-                <MudLayout>
-                    <ThemeDrawer @bind-ThemeDrawerOpen="_themeDrawerOpen" ThemePreference="_themePreference"
-                        ThemePreferenceChanged="ThemePreferenceChanged" />
-                    <ThemeButton OnClick="@(() => _themeDrawerOpen = true)" RightToLeft="@_rightToLeft" />
-                    <MainLayout>
-                        @Body
-                    </MainLayout>
-                </MudLayout>
-            </NotificationConnection>
+            <MudLayout>
+                <ThemeDrawer @bind-ThemeDrawerOpen="_themeDrawerOpen" ThemePreference="_themePreference"
+                    ThemePreferenceChanged="ThemePreferenceChanged" />
+                <ThemeButton OnClick="@(() => _themeDrawerOpen = true)" RightToLeft="@_rightToLeft" />
+                <MainLayout>
+                    @Body
+                </MainLayout>
+            </MudLayout>
         </Authorized>
     </AuthorizeView>
 </MudRTLProvider>

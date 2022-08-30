@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication.Internal;
 using Microsoft.Extensions.DependencyInjection;
 using ShortRoute.Client.Infrastructure.Auth.AzureAd;
+using ShortRoute.Client.Infrastructure.Auth.Enums;
 using ShortRoute.Client.Infrastructure.Auth.Jwt;
 
 namespace ShortRoute.Client.Infrastructure.Auth;

@@ -3,7 +3,7 @@
 @inject IStringLocalizer<SelfRegister> L
 @inject IStringLocalizer<SharedResource> LS
 
-<EditForm Model="@_createUserRequest" OnValidSubmit="SubmitAsync">
+<EditForm OnValidSubmit="SubmitAsync">@*Model="@_createUserRequest">*@
     <MudCard Elevation="0">
         <MudCardHeader>
             <CardHeaderContent>
@@ -27,11 +27,7 @@
             <MudGrid>
                 <DataAnnotationsValidator />
                 <CustomValidation @ref="_customValidation" />
-                <MudItem xs="12" md="6">
-                    <MudTextField T="string" Label="Tenant Name" Variant="Variant.Outlined" @bind-Value="Tenant"
-                                  For="@(() => Tenant)" Required />
-                </MudItem>
-                   <MudItem xs="12" md="6">
+                @*<MudItem xs="12" md="6">
                     <MudTextField T="string" Label="User Name" Variant="Variant.Outlined"
                                   @bind-Value="_createUserRequest.UserName" For="@(() => _createUserRequest.UserName)"
                                   InputType="InputType.Text" Adornment="Adornment.End" />
@@ -62,7 +58,7 @@
                     <MudTextField Label="@L["Confirm Password"]" Variant="Variant.Outlined" @bind-Value="_createUserRequest.ConfirmPassword"
                                   For="@(() => _createUserRequest.ConfirmPassword)" InputType="@_passwordInput" Adornment="Adornment.End"
                                   AdornmentIcon="@_passwordInputIcon" OnAdornmentClick="TogglePasswordVisibility" />
-                </MudItem>
+                </MudItem>*@
             </MudGrid>
         </MudCardContent>
         <MudCardActions Class="pb-4 pl-4">

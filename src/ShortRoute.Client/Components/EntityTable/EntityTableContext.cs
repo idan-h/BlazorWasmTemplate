@@ -1,5 +1,4 @@
-﻿using FSH.WebApi.Shared.Authorization;
-using MudBlazor;
+﻿using MudBlazor;
 
 namespace ShortRoute.Client.Components.EntityTable;
 
@@ -9,7 +8,8 @@ namespace ShortRoute.Client.Components.EntityTable;
 /// <typeparam name="TEntity">The type of the entity.</typeparam>
 /// <typeparam name="TId">The type of the id of the entity.</typeparam>
 /// <typeparam name="TRequest">The type of the Request which is used on the AddEditModal and which is sent with the CreateFunc and UpdateFunc.</typeparam>
-public abstract class EntityTableContext<TEntity, TId, TRequest>
+/// <typeparam name="TPagination">The type of the pagination model.</typeparam>
+public abstract class EntityTableContext<TEntity, TId, TRequest, TPagination>
 {
     /// <summary>
     /// The columns you want to display on the table.
@@ -65,17 +65,12 @@ public abstract class EntityTableContext<TEntity, TId, TRequest>
     public string? EntityNamePlural { get; }
 
     /// <summary>
-    /// The FSHResource that is representing this entity. This is used in combination with the xxActions to check for permissions.
-    /// </summary>
-    public string? EntityResource { get; }
-
-    /// <summary>
     /// The FSHAction name of the search permission. This is FSHAction.Search by default.
     /// When empty, no search functionality will be available.
     /// When the string is "true", search funtionality will be enabled,
     /// otherwise it will only be enabled if the user has permission for this action on the EntityResource.
     /// </summary>
-    public string SearchAction { get; }
+    public string SearchPermission { get; }
 
     /// <summary>
     /// The permission name of the create permission. This is FSHAction.Create by default.
@@ -83,7 +78,7 @@ public abstract class EntityTableContext<TEntity, TId, TRequest>
     /// When the string "true", create funtionality will be enabled,
     /// otherwise it will only be enabled if the user has permission for this action on the EntityResource.
     /// </summary>
-    public string CreateAction { get; }
+    public string CreatePermission { get; }
 
     /// <summary>
     /// The permission name of the update permission. This is FSHAction.Update by default.
@@ -91,7 +86,7 @@ public abstract class EntityTableContext<TEntity, TId, TRequest>
     /// When the string is "true", update funtionality will be enabled,
     /// otherwise it will only be enabled if the user has permission for this action on the EntityResource.
     /// </summary>
-    public string UpdateAction { get; }
+    public string UpdatePermission { get; }
 
     /// <summary>
     /// The permission name of the delete permission. This is FSHAction.Delete by default.
@@ -99,12 +94,12 @@ public abstract class EntityTableContext<TEntity, TId, TRequest>
     /// When the string is "true", delete funtionality will be enabled,
     /// otherwise it will only be enabled if the user has permission for this action on the EntityResource.
     /// </summary>
-    public string DeleteAction { get; }
+    public string DeletePermission { get; }
 
     /// <summary>
     /// The permission name of the export permission. This is FSHAction.Export by default.
     /// </summary>
-    public string ExportAction { get; }
+    public string ExportPermission { get; }
 
     /// <summary>
     /// Use this if you want to run initialization during OnInitialized of the AddEdit form.
@@ -137,18 +132,16 @@ public abstract class EntityTableContext<TEntity, TId, TRequest>
         Func<TId, Task>? deleteFunc,
         string? entityName,
         string? entityNamePlural,
-        string? entityResource,
-        string? searchAction,
-        string? createAction,
-        string? updateAction,
-        string? deleteAction,
-        string? exportAction,
+        string searchPermission,
+        string createPermission,
+        string updatePermission,
+        string deletePermission,
+        string exportPermission,
         Func<Task>? editFormInitializedFunc,
         Func<bool>? hasExtraActionsFunc,
         Func<TEntity, bool>? canUpdateEntityFunc,
         Func<TEntity, bool>? canDeleteEntityFunc)
     {
-        EntityResource = entityResource;
         Fields = fields;
         EntityName = entityName;
         EntityNamePlural = entityNamePlural;
@@ -158,11 +151,11 @@ public abstract class EntityTableContext<TEntity, TId, TRequest>
         GetDetailsFunc = getDetailsFunc;
         UpdateFunc = updateFunc;
         DeleteFunc = deleteFunc;
-        SearchAction = searchAction ?? FSHAction.Search;
-        CreateAction = createAction ?? FSHAction.Create;
-        UpdateAction = updateAction ?? FSHAction.Update;
-        DeleteAction = deleteAction ?? FSHAction.Delete;
-        ExportAction = exportAction ?? FSHAction.Export;
+        SearchPermission = searchPermission;
+        CreatePermission = createPermission;
+        UpdatePermission = updatePermission;
+        DeletePermission = deletePermission;
+        ExportPermission = exportPermission;
         EditFormInitializedFunc = editFormInitializedFunc;
         HasExtraActionsFunc = hasExtraActionsFunc;
         CanUpdateEntityFunc = canUpdateEntityFunc;
@@ -181,7 +174,7 @@ public abstract class EntityTableContext<TEntity, TId, TRequest>
 
     // Shortcuts
     public EntityClientTableContext<TEntity, TId, TRequest>? ClientContext => this as EntityClientTableContext<TEntity, TId, TRequest>;
-    public EntityServerTableContext<TEntity, TId, TRequest>? ServerContext => this as EntityServerTableContext<TEntity, TId, TRequest>;
+    public EntityServerTableContext<TEntity, TId, TRequest, TPagination>? ServerContext => this as EntityServerTableContext<TEntity, TId, TRequest, TPagination>;
     public bool IsClientContext => ClientContext is not null;
     public bool IsServerContext => ServerContext is not null;
 

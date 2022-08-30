@@ -1,7 +1,6 @@
 ﻿@inject IStringLocalizer<UpgradeSubscriptionModal> L
-@inject ITenantsClient TenantsClient
 
-<EditForm Model="@Request" OnValidSubmit="UpgradeSubscriptionAsync">
+@*<EditForm Model="@Request" OnValidSubmit="UpgradeSubscriptionAsync">
     <MudDialog>
         <TitleContent>
             <MudText Typo="Typo.h6">
@@ -28,27 +27,27 @@
         </DialogActions>
     </MudDialog>
 </EditForm>
-
+*@
 @code
 {
-    [Parameter] public UpgradeSubscriptionRequest Request { get; set; } = new();
+    //[Parameter] public UpgradeSubscriptionRequest Request { get; set; } = new();
     [CascadingParameter] private MudDialogInstance MudDialog { get; set; } = default!;
     DateTime? date = DateTime.Today;
 
-    protected override void OnInitialized() =>
-        date = Request.ExtendedExpiryDate;
+    //protected override void OnInitialized() =>
+    //    date = Request.ExtendedExpiryDate;
 
     private async Task UpgradeSubscriptionAsync()
     {
-        Request.ExtendedExpiryDate = date.HasValue ? date.Value : Request.ExtendedExpiryDate;
-        if (await ApiHelper.ExecuteCallGuardedAsync(
-            () => TenantsClient.UpgradeSubscriptionAsync(Request.TenantId, Request),
-            Snackbar,
-            null,
-            L["Upgraded Subscription."]) is not null)
-        {
-            MudDialog.Close();
-        }
+        //Request.ExtendedExpiryDate = date.HasValue ? date.Value : Request.ExtendedExpiryDate;
+        //if (await ApiHelper.ExecuteClientCall(
+        //    () => TenantsClient.UpgradeSubscriptionAsync(Request.TenantId, Request),
+        //    Snackbar,
+        //    null,
+        //    L["Upgraded Subscription."]) is not null)
+        //{
+        //    MudDialog.Close();
+        //}
     }
 
     public void Cancel()

@@ -18,7 +18,7 @@ public class JwtAuthenticationHeaderHandler : DelegatingHandler
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
         // skip token endpoints
-        if (request.RequestUri?.AbsolutePath.Contains("/tokens") is not true)
+        if (request.RequestUri?.AbsolutePath.Contains("/auth") is not true)
         {
             if (await _tokenProviderAccessor.TokenProvider.GetAccessTokenAsync() is string token)
             {

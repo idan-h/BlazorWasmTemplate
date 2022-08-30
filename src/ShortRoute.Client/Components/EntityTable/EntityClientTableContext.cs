@@ -1,11 +1,14 @@
-﻿namespace ShortRoute.Client.Components.EntityTable;
+﻿using Refit;
+using ShortRoute.Client.Models;
+
+namespace ShortRoute.Client.Components.EntityTable;
 
 /// <summary>
 /// Initialization Context for the EntityTable Component.
 /// Use this one if you want to use Client Paging, Sorting and Filtering.
 /// </summary>
 public class EntityClientTableContext<TEntity, TId, TRequest>
-    : EntityTableContext<TEntity, TId, TRequest>
+    : EntityTableContext<TEntity, TId, TRequest, NullType>
 {
     /// <summary>
     /// A function that loads all the data for the table from the api and returns a ListResult of TEntity.
@@ -30,12 +33,11 @@ public class EntityClientTableContext<TEntity, TId, TRequest>
         Func<TId, Task>? deleteFunc = null,
         string? entityName = null,
         string? entityNamePlural = null,
-        string? entityResource = null,
-        string? searchAction = null,
-        string? createAction = null,
-        string? updateAction = null,
-        string? deleteAction = null,
-        string? exportAction = null,
+        string searchPermission = "",
+        string createPermission = "",
+        string updatePermission = "",
+        string deletePermission = "",
+        string exportPermission = "",
         Func<Task>? editFormInitializedFunc = null,
         Func<bool>? hasExtraActionsFunc = null,
         Func<TEntity, bool>? canUpdateEntityFunc = null,
@@ -50,12 +52,11 @@ public class EntityClientTableContext<TEntity, TId, TRequest>
             deleteFunc,
             entityName,
             entityNamePlural,
-            entityResource,
-            searchAction,
-            createAction,
-            updateAction,
-            deleteAction,
-            exportAction,
+            searchPermission,
+            createPermission,
+            updatePermission,
+            deletePermission,
+            exportPermission,
             editFormInitializedFunc,
             hasExtraActionsFunc,
             canUpdateEntityFunc,

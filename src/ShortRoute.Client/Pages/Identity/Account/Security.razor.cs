@@ -3,29 +3,44 @@ using ShortRoute.Client.Infrastructure.ApiClient;
 using ShortRoute.Client.Shared;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
+using ShortRoute.Contracts.Commands.App.Account;
+using ShortRoute.Client.Infrastructure.ApiClient.v1;
 
 namespace ShortRoute.Client.Pages.Identity.Account;
 
 public partial class Security
 {
     [Inject]
-    public IPersonalClient PersonalClient { get; set; } = default!;
+    public IAccountClient AccountClient { get; set; } = default!;
 
-    private readonly ChangePasswordRequest _passwordModel = new();
+    private readonly ChangePasswordCommand _passwordModel = new();
+    private string _confirmedPassword;
 
     private CustomValidation? _customValidation;
 
     private async Task ChangePasswordAsync()
     {
-        if (await ApiHelper.ExecuteCallGuardedAsync(
-            () => PersonalClient.ChangePasswordAsync(_passwordModel),
+        if (_passwordModel.NewPassword != _confirmedPassword)
+        {
+            _customValidation?.DisplayErrors(new Dictionary<string, ICollection<string>>
+            {
+                [nameof(_passwordModel.NewPassword)] = new[]
+                {
+                    L["Passwords don't match"].Value,
+                }
+            });
+            return;
+        }
+
+        if (await ApiHelper.ExecuteClientCall(
+            () => AccountClient.ChangePassword(_passwordModel),
             Snackbar,
             _customValidation,
             L["Password Changed!"]))
         {
-            _passwordModel.Password = string.Empty;
+            _passwordModel.CurrentPassword = string.Empty;
             _passwordModel.NewPassword = string.Empty;
-            _passwordModel.ConfirmNewPassword = string.Empty;
+            _confirmedPassword = string.Empty;
         }
     }
 

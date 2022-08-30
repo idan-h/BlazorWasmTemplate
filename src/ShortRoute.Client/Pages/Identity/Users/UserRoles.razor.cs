@@ -1,10 +1,13 @@
 ﻿using ShortRoute.Client.Infrastructure.ApiClient;
 using ShortRoute.Client.Shared;
-using FSH.WebApi.Shared.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
-using ShortRoute.Client.Infrastructure.Auth;
+using ShortRoute.Client.Infrastructure.Auth.Extensions;
+using ShortRoute.Client.Infrastructure.ApiClient.v1;
+using ShortRoute.Contracts.Dtos.Authentication;
+using ShortRoute.Contracts.Auth;
+using ShortRoute.Client.Models;
 
 namespace ShortRoute.Client.Pages.Identity.Users;
 
@@ -18,8 +21,11 @@ public partial class UserRoles
     protected IAuthorizationService AuthService { get; set; } = default!;
     [Inject]
     protected IUsersClient UsersClient { get; set; } = default!;
+    [Inject]
+    protected IRolesClient RolesClient { get; set; } = default!;
 
-    private List<UserRoleDto> _userRolesList = default!;
+    private UserDto _user = default!;
+    private List<RoleModel> _userRolesList = default!;
 
     private string _title = string.Empty;
     private string _description = string.Empty;
@@ -33,21 +39,21 @@ public partial class UserRoles
     protected override async Task OnInitializedAsync()
     {
         var state = await AuthState;
-        _canEditUsers = await AuthService.HasPermissionAsync(state.User, FSHAction.Update, FSHResource.Users);
-        _canSearchRoles = await AuthService.HasPermissionAsync(state.User, FSHAction.View, FSHResource.UserRoles);
+        _canEditUsers = await AuthService.HasPermissionAsync(state.User, Permissions.UserChange);
+        _canSearchRoles = await AuthService.HasPermissionAsync(state.User, Permissions.UserRolesChange);
 
-        if (await ApiHelper.ExecuteCallGuardedAsync(
-                () => UsersClient.GetByIdAsync(Id), Snackbar)
-            is UserDetailsDto user)
+        if (await ApiHelper.ExecuteClientCall(
+                () => UsersClient.UsersGetSingle(Id!), Snackbar)
+            is UserDto user)
         {
-            _title = $"{user.FirstName} {user.LastName}";
-            _description = string.Format(L["Manage {0} {1}'s Roles"], user.FirstName, user.LastName);
+            _user = user;
+            _title = user.UserName!;
+            _description = string.Format(L["Manage {0}'s Roles"], user.UserName);
 
-            if (await ApiHelper.ExecuteCallGuardedAsync(
-                    () => UsersClient.GetRolesAsync(user.Id.ToString()), Snackbar)
-                is ICollection<UserRoleDto> response)
+            if (await ApiHelper.ExecuteClientCall(() => RolesClient.RolesGetList(), Snackbar)
+                is ICollection<RoleDto> response)
             {
-                _userRolesList = response.ToList();
+                _userRolesList = user.RoleNames.Select(r => new RoleModel(response.First(n => n.RoleName == r), true)).ToList();
             }
         }
 
@@ -56,22 +62,14 @@ public partial class UserRoles
 
     private async Task SaveAsync()
     {
-        var request = new UserRolesRequest()
-        {
-            UserRoles = _userRolesList
-        };
-
-        if (await ApiHelper.ExecuteCallGuardedAsync(
-                () => UsersClient.AssignRolesAsync(Id, request),
-                Snackbar,
-                successMessage: L["Updated User Roles."])
-            is not null)
+        _user.RoleNames = _userRolesList.Select(r => r.Dto.RoleName);
+        if (await ApiHelper.ExecuteClientCall(() => UsersClient.UsersUpdate(_user), Snackbar, successMessage: L["Updated User Roles."]))
         {
             Navigation.NavigateTo("/users");
         }
     }
 
-    private bool Search(UserRoleDto userRole) =>
+    private bool Search(RoleModel userRole) =>
         string.IsNullOrWhiteSpace(_searchString)
-            || userRole.RoleName?.Contains(_searchString, StringComparison.OrdinalIgnoreCase) is true;
+            || userRole.Dto.RoleName?.Contains(_searchString, StringComparison.OrdinalIgnoreCase) is true;
 }

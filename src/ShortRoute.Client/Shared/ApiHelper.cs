@@ -1,86 +1,167 @@
 ﻿using ShortRoute.Client.Components.Common;
 using ShortRoute.Client.Infrastructure.ApiClient;
 using MudBlazor;
+using Refit;
+using ShortRoute.Contracts.Responses.Common;
 
 namespace ShortRoute.Client.Shared;
 
 public static class ApiHelper
 {
-    public static async Task<T?> ExecuteCallGuardedAsync<T>(
-        Func<Task<T>> call,
+    public static async Task<T?> ExecuteClientCall<T>(
+        this Func<Task<T>> call,
         ISnackbar snackbar,
         CustomValidation? customValidation = null,
-        string? successMessage = null)
+        string? successMessage = null
+        )
     {
         customValidation?.ClearErrors();
+
         try
         {
             var result = await call();
-
-            if (!string.IsNullOrWhiteSpace(successMessage))
-            {
-                snackbar.Add(successMessage, Severity.Info);
-            }
-
+            snackbar.Add(successMessage, Severity.Info);
             return result;
         }
-        catch (ApiException<HttpValidationProblemDetails> ex)
+        catch (ApiException ex)
         {
-            if (ex.Result.Errors is not null)
+            if (ex.Content is string exContent)
             {
-                customValidation?.DisplayErrors(ex.Result.Errors);
-            }
-            else
-            {
-                snackbar.Add("Something went wrong!", Severity.Error);
-            }
-        }
-        catch (ApiException<ErrorResult> ex)
-        {
-            snackbar.Add(ex.Result.Exception, Severity.Error);
-        }
-        catch (Exception ex)
-        {
-            snackbar.Add(ex.Message, Severity.Error);
-        }
+                Error? errorObj = null;
+                try
+                {
+                    errorObj = JsonSerializer.Deserialize<Error>(ex.Content);
+                }
+                catch { }
 
-        return default;
+                if (errorObj is not null)
+                {
+                    if (customValidation is not null)
+                    {
+                        //customValidation?.DisplayErrors(errorObj.Errors);
+                    }
+                    else
+                    {
+                        foreach (var error in errorObj.Errors)
+                        {
+                            snackbar.Add(error, Severity.Error);
+                        }
+                    }
+
+                    return default;
+                }
+            }
+
+            snackbar.Add(ex.Message, Severity.Error);
+            return default;
+        }
     }
 
-    public static async Task<bool> ExecuteCallGuardedAsync(
-        Func<Task> call,
+    public static async Task<T?> ExecuteClientCall<T>(
+        this Func<Task<ApiResponse<T>>> call,
         ISnackbar snackbar,
         CustomValidation? customValidation = null,
-        string? successMessage = null)
+        string? successMessage = null
+        )
     {
         customValidation?.ClearErrors();
-        try
-        {
-            await call();
 
-            if (!string.IsNullOrWhiteSpace(successMessage))
+        var result = await call();
+
+        if (!result.IsSuccessStatusCode)
+        {
+            var ex = result.Error;
+
+            if (ex.Content is string exContent)
             {
-                snackbar.Add(successMessage, Severity.Success);
+                Error? errorObj = null;
+                try
+                {
+                    errorObj = JsonSerializer.Deserialize<Error>(ex.Content);
+                }
+                catch { }
+
+                if (errorObj is not null)
+                {
+                    if (customValidation is not null)
+                    {
+                        //customValidation?.DisplayErrors(errorObj.Errors);
+                    }
+                    else
+                    {
+                        foreach (var error in errorObj.Errors)
+                        {
+                            snackbar.Add(error, Severity.Error);
+                        }
+                    }
+
+                    return default;
+                }
             }
 
-            return true;
-        }
-        catch (ApiException<HttpValidationProblemDetails> ex)
-        {
-            if (ex.Result.Errors is not null)
-            {
-                customValidation?.DisplayErrors(ex.Result.Errors);
-            }
-            else
-            {
-                snackbar.Add("Something went wrong!", Severity.Error);
-            }
-        }
-        catch (ApiException<ErrorResult> ex)
-        {
-            snackbar.Add(ex.Result.Exception, Severity.Error);
+            snackbar.Add(result.Error.Message, Severity.Error);
+            return default;
         }
 
-        return false;
+        if (!string.IsNullOrWhiteSpace(successMessage))
+        {
+            snackbar.Add(successMessage, Severity.Info);
+        }
+
+        return result.Content;
+    }
+
+    public static async Task<bool> ExecuteClientCall(
+        this Func<Task<ApiResponse<object>>> call,
+        ISnackbar snackbar,
+        CustomValidation? customValidation = null,
+        string? successMessage = null
+        )
+    {
+        customValidation?.ClearErrors();
+
+        var result = await call();
+
+        if (!result.IsSuccessStatusCode)
+        {
+            var ex = result.Error;
+
+            if (ex.Content is string exContent)
+            {
+                Error? errorObj = null;
+                try
+                {
+                    errorObj = JsonSerializer.Deserialize<Error>(ex.Content);
+                }
+                catch { }
+
+                if (errorObj is not null)
+                {
+                    if (customValidation is not null)
+                    {
+                        //customValidation?.DisplayErrors(errorObj.Errors);
+                    }
+                    else
+                    {
+                        foreach (var error in errorObj.Errors)
+                        {
+                            snackbar.Add(error, Severity.Error);
+                        }
+                    }
+
+                    return false;
+                }
+            }
+
+            snackbar.Add(result.Error.Message, Severity.Error);
+            return false;
+        }
+
+        if (!string.IsNullOrWhiteSpace(successMessage))
+        {
+            snackbar.Add(successMessage, Severity.Info);
+        }
+
+        return true;
     }
 }

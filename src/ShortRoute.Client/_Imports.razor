@@ -20,17 +20,14 @@
 @using ShortRoute.Client.Components.Common
 @using ShortRoute.Client.Components.EntityTable
 @using ShortRoute.Client.Components.Localization
-@using ShortRoute.Client.Components.Notifications
+@using ShortRoute.Client.Components.State;
 @using ShortRoute.Client.Components.ThemeManager
 @using ShortRoute.Client.Infrastructure.ApiClient
 @using ShortRoute.Client.Infrastructure.Auth
 @using ShortRoute.Client.Infrastructure.Common
-@using ShortRoute.Client.Infrastructure.Notifications
 @using ShortRoute.Client.Infrastructure.Preferences
-@using FSH.WebApi.Shared.Authorization
+@using ShortRoute.Contracts.Auth
 @using Blazored.LocalStorage
-@using Mapster
-@using MediatR.Courier
 @using MudBlazor
 
 @attribute [Authorize]

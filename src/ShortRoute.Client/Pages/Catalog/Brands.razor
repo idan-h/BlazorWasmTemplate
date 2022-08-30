@@ -1,13 +1,13 @@
 ﻿@page "/catalog/brands"
 @page "/"
-@attribute [MustHavePermission(FSHAction.View, FSHResource.Brands)]
+@using ShortRoute.Client.Models
+@attribute [Authorize(Permissions.InvoiceRead)]
 
 @inject IStringLocalizer<Brands> L
-@inject IBrandsClient BrandsClient
 
 <FshTitle Title="@L["Brands"]" Description="@L["Manage Brands."]" />
 
-<EntityTable TEntity="BrandDto" TId="Guid" TRequest="UpdateBrandRequest" Context="@Context">
+@*<EntityTable TEntity="BrandDto" TId="Guid" TRequest="UpdateBrandRequest" Context="@Context">
 
     <EditFormContent>
         @if (!Context.AddEditModal.IsCreate)
@@ -26,28 +26,28 @@
     </EditFormContent>
 
 </EntityTable>
-
+*@
 @code
 {
-    protected EntityServerTableContext<BrandDto, Guid, UpdateBrandRequest> Context { get; set; } = default!;
+    //protected EntityServerTableContext<string, string, NullType, NullType> Context { get; set; } = default!;
 
-    protected override void OnInitialized() =>
-        Context = new(
-            entityName: L["Brand"],
-            entityNamePlural: L["Brands"],
-            entityResource: FSHResource.Brands,
-            fields: new()
-            {
-                new(brand => brand.Id, L["Id"], "Id"),
-                new(brand => brand.Name, L["Name"], "Name"),
-                new(brand => brand.Description, L["Description"], "Description"),
-            },
-            idFunc: brand => brand.Id,
-            searchFunc: async filter => (await BrandsClient
-                .SearchAsync(filter.Adapt<SearchBrandsRequest>()))
-                .Adapt<PaginationResponse<BrandDto>>(),
-            createFunc: async brand => await BrandsClient.CreateAsync(brand.Adapt<CreateBrandRequest>()),
-            updateFunc: async (id, brand) => await BrandsClient.UpdateAsync(id, brand),
-            deleteFunc: async id => await BrandsClient.DeleteAsync(id),
-            exportAction: string.Empty);
+    //protected override void OnInitialized() =>
+    //    Context = new(
+    //        entityName: L["Brand"],
+    //        entityNamePlural: L["Brands"],
+    //        entityResource: FSHResource.Brands,
+    //        fields: new()
+    //        {
+    //            new(brand => brand.Id, L["Id"], "Id"),
+    //            new(brand => brand.Name, L["Name"], "Name"),
+    //            new(brand => brand.Description, L["Description"], "Description"),
+    //        },
+    //        idFunc: brand => brand.Id,
+    //        searchFunc: async filter => (await BrandsClient
+    //            .SearchAsync(filter.Adapt<SearchBrandsRequest>()))
+    //            .Adapt<PaginationResponse<BrandDto>>(),
+    //        createFunc: async brand => await BrandsClient.CreateAsync(brand.Adapt<CreateBrandRequest>()),
+    //        updateFunc: async (id, brand) => await BrandsClient.UpdateAsync(id, brand),
+    //        deleteFunc: async id => await BrandsClient.DeleteAsync(id),
+    //        exportAction: string.Empty);
 }

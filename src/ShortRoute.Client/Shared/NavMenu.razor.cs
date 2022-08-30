@@ -1,9 +1,9 @@
 ﻿using ShortRoute.Client.Infrastructure.Common;
-using FSH.WebApi.Shared.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
-using ShortRoute.Client.Infrastructure.Auth;
+using ShortRoute.Client.Infrastructure.Auth.Extensions;
+using ShortRoute.Contracts.Auth;
 
 namespace ShortRoute.Client.Shared;
 
@@ -28,12 +28,12 @@ public partial class NavMenu
     {
         _hangfireUrl = Config[ConfigNames.ApiBaseUrl] + "jobs";
         var user = (await AuthState).User;
-        _canViewHangfire = await AuthService.HasPermissionAsync(user, FSHAction.View, FSHResource.Hangfire);
-        _canViewDashboard = await AuthService.HasPermissionAsync(user, FSHAction.View, FSHResource.Dashboard);
-        _canViewRoles = await AuthService.HasPermissionAsync(user, FSHAction.View, FSHResource.Roles);
-        _canViewUsers = await AuthService.HasPermissionAsync(user, FSHAction.View, FSHResource.Users);
-        _canViewProducts = await AuthService.HasPermissionAsync(user, FSHAction.View, FSHResource.Products);
-        _canViewBrands = await AuthService.HasPermissionAsync(user, FSHAction.View, FSHResource.Brands);
-        _canViewTenants = await AuthService.HasPermissionAsync(user, FSHAction.View, FSHResource.Tenants);
+        _canViewHangfire = await AuthService.HasPermissionAsync(user, Permissions.Hangfire);
+        _canViewDashboard = true;// await AuthService.HasPermissionAsync(user, Permissions.);
+        _canViewRoles = await AuthService.HasPermissionAsync(user, Permissions.RoleRead);
+        _canViewUsers = await AuthService.HasPermissionAsync(user, Permissions.UserRead);
+        _canViewProducts = true;// await AuthService.HasPermissionAsync(user, Permissions.);
+        _canViewBrands = true;// await AuthService.HasPermissionAsync(user, FSHAction.View, FSHResource.Brands);
+        _canViewTenants = await AuthService.HasPermissionAsync(user, Permissions.TenantList);
     }
 }

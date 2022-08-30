@@ -1,13 +1,13 @@
 using ShortRoute.Client.Components.Dialogs;
 using ShortRoute.Client.Infrastructure.ApiClient;
 using ShortRoute.Client.Shared;
-using Mapster;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.JSInterop;
 using MudBlazor;
-using ShortRoute.Client.Infrastructure.Auth;
+using ShortRoute.Client.Infrastructure.Auth.Extensions;
+using ShortRoute.Client.Models;
 
 namespace ShortRoute.Client.Components.EntityTable;
 
@@ -16,7 +16,7 @@ public partial class EntityTable<TEntity, TId, TRequest>
 {
     [Parameter]
     [EditorRequired]
-    public EntityTableContext<TEntity, TId, TRequest> Context { get; set; } = default!;
+    public EntityTableContext<TEntity, TId, TRequest, NullType> Context { get; set; } = default!;
 
     [Parameter]
     public bool Loading { get; set; }
@@ -59,11 +59,11 @@ public partial class EntityTable<TEntity, TId, TRequest>
     protected override async Task OnInitializedAsync()
     {
         var state = await AuthState;
-        _canSearch = await CanDoActionAsync(Context.SearchAction, state);
-        _canCreate = await CanDoActionAsync(Context.CreateAction, state);
-        _canUpdate = await CanDoActionAsync(Context.UpdateAction, state);
-        _canDelete = await CanDoActionAsync(Context.DeleteAction, state);
-        _canExport = await CanDoActionAsync(Context.ExportAction, state);
+        _canSearch = await CanDoActionAsync(Context.SearchPermission, state);
+        _canCreate = await CanDoActionAsync(Context.CreatePermission, state);
+        _canUpdate = await CanDoActionAsync(Context.UpdatePermission, state);
+        _canDelete = await CanDoActionAsync(Context.DeletePermission, state);
+        _canExport = await CanDoActionAsync(Context.ExportPermission, state);
 
         await LocalLoadDataAsync();
     }
@@ -73,10 +73,15 @@ public partial class EntityTable<TEntity, TId, TRequest>
             ? LocalLoadDataAsync()
             : ServerLoadDataAsync();
 
-    private async Task<bool> CanDoActionAsync(string? action, AuthenticationState state) =>
-        !string.IsNullOrWhiteSpace(action) &&
-            ((bool.TryParse(action, out bool isTrue) && isTrue) || // check if action equals "True", then it's allowed
-            (Context.EntityResource is { } resource && await AuthService.HasPermissionAsync(state.User, action, resource)));
+    private async Task<bool> CanDoActionAsync(string action, AuthenticationState state)
+    {
+        if (string.IsNullOrWhiteSpace(action))
+        {
+            return false;
+        }
+
+        return action.ToLower() == "true" || await AuthService.HasPermissionAsync(state.User, action);
+    }
 
     private bool HasActions => _canUpdate || _canDelete || (Context.HasExtraActionsFunc is not null && Context.HasExtraActionsFunc());
     private bool CanUpdateEntity(TEntity entity) => _canUpdate && (Context.CanUpdateEntityFunc is null || Context.CanUpdateEntityFunc(entity));
@@ -97,7 +102,7 @@ public partial class EntityTable<TEntity, TId, TRequest>
 
         Loading = true;
 
-        if (await ApiHelper.ExecuteCallGuardedAsync(
+        if (await ApiHelper.ExecuteClientCall(
                 () => Context.ClientContext.LoadDataFunc(), Snackbar)
             is List<TEntity> result)
         {
@@ -129,99 +134,101 @@ public partial class EntityTable<TEntity, TId, TRequest>
 
     private async Task<TableData<TEntity>> ServerReload(TableState state)
     {
-        if (!Loading && Context.ServerContext is not null)
-        {
-            Loading = true;
+        //if (!Loading && Context.ServerContext is not null)
+        //{
+        //    Loading = true;
 
-            var filter = GetPaginationFilter(state);
+        //    var filter = GetPaginationFilter(state);
 
-            if (await ApiHelper.ExecuteCallGuardedAsync(
-                    () => Context.ServerContext.SearchFunc(filter), Snackbar)
-                is { } result)
-            {
-                _totalItems = result.TotalCount;
-                _entityList = result.Data;
-            }
+        //    if (await ApiHelper.ExecuteCallGuardedAsync(
+        //            () => Context.ServerContext.SearchFunc(filter), Snackbar)
+        //        is { } result)
+        //    {
+        //        _totalItems = result.TotalCount;
+        //        _entityList = result.Data;
+        //    }
 
-            Loading = false;
-        }
+        //    Loading = false;
+        //}
 
-        return new TableData<TEntity> { TotalItems = _totalItems, Items = _entityList };
+        //return new TableData<TEntity> { TotalItems = _totalItems, Items = _entityList };
+
+        return new TableData<TEntity>();
     }
 
     private async Task ExportAsync()
     {
-        if (!Loading && Context.ServerContext is not null)
-        {
-            if (Context.ServerContext.ExportFunc is not null)
-            {
-                Loading = true;
+        //if (!Loading && Context.ServerContext is not null)
+        //{
+        //    if (Context.ServerContext.ExportFunc is not null)
+        //    {
+        //        Loading = true;
 
-                var filter = GetBaseFilter();
+        //        var filter = GetBaseFilter();
 
-                if (await ApiHelper.ExecuteCallGuardedAsync(
-                        () => Context.ServerContext.ExportFunc(filter), Snackbar)
-                    is { } result)
-                {
-                    using var streamRef = new DotNetStreamReference(result.Stream);
-                    await JS.InvokeVoidAsync("downloadFileFromStream", $"{Context.EntityNamePlural}.xlsx", streamRef);
-                }
+        //        if (await ApiHelper.ExecuteCallGuardedAsync(
+        //                () => Context.ServerContext.ExportFunc(filter), Snackbar)
+        //            is { } result)
+        //        {
+        //            using var streamRef = new DotNetStreamReference(result.Stream);
+        //            await JS.InvokeVoidAsync("downloadFileFromStream", $"{Context.EntityNamePlural}.xlsx", streamRef);
+        //        }
 
-                Loading = false;
-            }
-        }
+        //        Loading = false;
+        //    }
+        //}
     }
 
-    private PaginationFilter GetPaginationFilter(TableState state)
-    {
-        string[]? orderings = null;
-        if (!string.IsNullOrEmpty(state.SortLabel))
-        {
-            orderings = state.SortDirection == SortDirection.None
-                ? new[] { $"{state.SortLabel}" }
-                : new[] { $"{state.SortLabel} {state.SortDirection}" };
-        }
+    //private PaginationFilter GetPaginationFilter(TableState state)
+    //{
+    //    string[]? orderings = null;
+    //    if (!string.IsNullOrEmpty(state.SortLabel))
+    //    {
+    //        orderings = state.SortDirection == SortDirection.None
+    //            ? new[] { $"{state.SortLabel}" }
+    //            : new[] { $"{state.SortLabel} {state.SortDirection}" };
+    //    }
 
-        var filter = new PaginationFilter
-        {
-            PageSize = state.PageSize,
-            PageNumber = state.Page + 1,
-            Keyword = SearchString,
-            OrderBy = orderings ?? Array.Empty<string>()
-        };
+    //    var filter = new PaginationFilter
+    //    {
+    //        PageSize = state.PageSize,
+    //        PageNumber = state.Page + 1,
+    //        Keyword = SearchString,
+    //        OrderBy = orderings ?? Array.Empty<string>()
+    //    };
 
-        if (!Context.AllColumnsChecked)
-        {
-            filter.AdvancedSearch = new()
-            {
-                Fields = Context.SearchFields,
-                Keyword = filter.Keyword
-            };
-            filter.Keyword = null;
-        }
+    //    if (!Context.AllColumnsChecked)
+    //    {
+    //        filter.AdvancedSearch = new()
+    //        {
+    //            Fields = Context.SearchFields,
+    //            Keyword = filter.Keyword
+    //        };
+    //        filter.Keyword = null;
+    //    }
 
-        return filter;
-    }
+    //    return filter;
+    //}
 
-    private BaseFilter GetBaseFilter()
-    {
-        var filter = new BaseFilter
-        {
-            Keyword = SearchString,
-        };
+    //private BaseFilter GetBaseFilter()
+    //{
+    //    var filter = new BaseFilter
+    //    {
+    //        Keyword = SearchString,
+    //    };
 
-        if (!Context.AllColumnsChecked)
-        {
-            filter.AdvancedSearch = new()
-            {
-                Fields = Context.SearchFields,
-                Keyword = filter.Keyword
-            };
-            filter.Keyword = null;
-        }
+    //    if (!Context.AllColumnsChecked)
+    //    {
+    //        filter.AdvancedSearch = new()
+    //        {
+    //            Fields = Context.SearchFields,
+    //            Keyword = filter.Keyword
+    //        };
+    //        filter.Keyword = null;
+    //    }
 
-        return filter;
-    }
+    //    return filter;
+    //}
 
     private async Task InvokeModal(TEntity? entity = default)
     {
@@ -244,13 +251,13 @@ public partial class EntityTable<TEntity, TId, TRequest>
 
             saveFunc = Context.CreateFunc;
 
-            requestModel =
-                Context.GetDefaultsFunc is not null
-                    && await ApiHelper.ExecuteCallGuardedAsync(
-                            () => Context.GetDefaultsFunc(), Snackbar)
-                        is { } defaultsResult
-                ? defaultsResult
-                : new TRequest();
+            //requestModel =
+            //    Context.GetDefaultsFunc is not null
+            //        && await ApiHelper.ExecuteCallGuardedAsync(
+            //                () => Context.GetDefaultsFunc(), Snackbar)
+            //            is { } defaultsResult
+            //    ? defaultsResult
+            //    : new TRequest();
 
             title = $"{L["Create"]} {Context.EntityName}";
             successMessage = $"{Context.EntityName} {L["Created"]}";
@@ -264,21 +271,21 @@ public partial class EntityTable<TEntity, TId, TRequest>
 
             saveFunc = request => Context.UpdateFunc(id, request);
 
-            requestModel =
-                Context.GetDetailsFunc is not null
-                    && await ApiHelper.ExecuteCallGuardedAsync(
-                            () => Context.GetDetailsFunc(id!),
-                            Snackbar)
-                        is { } detailsResult
-                ? detailsResult
-                : entity!.Adapt<TRequest>();
+            //requestModel =
+            //    Context.GetDetailsFunc is not null
+            //        && await ApiHelper.ExecuteCallGuardedAsync(
+            //                () => Context.GetDetailsFunc(id!),
+            //                Snackbar)
+            //            is { } detailsResult
+            //    ? detailsResult
+            //    : entity!.Adapt<TRequest>();
 
             title = $"{L["Edit"]} {Context.EntityName}";
             successMessage = $"{Context.EntityName} {L["Updated"]}";
         }
 
         parameters.Add(nameof(AddEditModal<TRequest>.SaveFunc), saveFunc);
-        parameters.Add(nameof(AddEditModal<TRequest>.RequestModel), requestModel);
+        //parameters.Add(nameof(AddEditModal<TRequest>.RequestModel), requestModel);
         parameters.Add(nameof(AddEditModal<TRequest>.Title), title);
         parameters.Add(nameof(AddEditModal<TRequest>.SuccessMessage), successMessage);
 
@@ -311,9 +318,9 @@ public partial class EntityTable<TEntity, TId, TRequest>
         {
             _ = Context.DeleteFunc ?? throw new InvalidOperationException("DeleteFunc can't be null!");
 
-            await ApiHelper.ExecuteCallGuardedAsync(
-                () => Context.DeleteFunc(id),
-                Snackbar);
+            //await ApiHelper.ExecuteClientCall(
+            //    () => Context.DeleteFunc(id),
+            //    Snackbar);
 
             await ReloadDataAsync();
         }

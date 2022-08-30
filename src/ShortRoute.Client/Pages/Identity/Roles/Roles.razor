@@ -1,11 +1,11 @@
 ﻿@page "/roles"
-@attribute [MustHavePermission(FSHAction.View, FSHResource.Roles)]
+@attribute [Authorize(Permissions.RoleRead)]
 
 @inject IStringLocalizer<Roles> L
 
 <FshTitle Title="@L["Roles"]" Description="@L["Manage Roles."]" />
 
-<EntityTable TEntity="RoleDto" TId="string" TRequest="CreateOrUpdateRoleRequest" Context="@Context">
+@*<EntityTable TEntity="RoleDto" TId="string" TRequest="CreateOrUpdateRoleRequest" Context="@Context">
 
     <ExtraActions>
         @if (_canViewRoleClaims)
@@ -30,4 +30,4 @@
         </MudItem>
     </EditFormContent>
 
-</EntityTable>
+</EntityTable>*@

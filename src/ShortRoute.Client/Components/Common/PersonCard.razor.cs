@@ -2,6 +2,7 @@
 using ShortRoute.Client.Infrastructure.Common;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
+using ShortRoute.Client.Infrastructure.Auth.Extensions;
 
 namespace ShortRoute.Client.Components.Common;
 
