@@ -22,8 +22,7 @@ public partial class ForgotPassword
 
         await ApiHelper.ExecuteClientCall(
             () => AccountClient.ForgotPassword(_forgotPasswordRequest),
-            Snackbar,
-            _customValidation);
+            Snackbar);
 
         BusySubmitting = false;
     }

@@ -38,7 +38,7 @@ public partial class Roles
                 new(role => role.Description, L["Description"])
             },
             idFunc: role => role.RoleName,
-            loadDataFunc: async () => (await RolesClient.RolesGetList()).Content?.ToList(),
+            loadDataFunc: async () => (await RolesClient.RolesGetList()).ToList(),
             searchFunc: (searchString, role) =>
                 string.IsNullOrWhiteSpace(searchString)
                     || role.RoleName?.Contains(searchString, StringComparison.OrdinalIgnoreCase) == true

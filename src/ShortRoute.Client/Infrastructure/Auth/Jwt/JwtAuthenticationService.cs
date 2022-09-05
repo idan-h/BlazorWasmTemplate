@@ -7,6 +7,8 @@ using ShortRoute.Contracts.Responses.Authentication;
 using ShortRoute.Client.Infrastructure.Auth.Extensions;
 using ShortRoute.Client.Infrastructure.Auth.Enums;
 using ShortRoute.Contracts.Auth;
+using Newtonsoft.Json;
+using System.Text;
 
 namespace ShortRoute.Client.Infrastructure.Auth.Jwt;
 
@@ -54,29 +56,23 @@ public class JwtAuthenticationService : AuthenticationStateProvider, IAuthentica
     {
         var authResponse = await _authClient.Authenticate(command);
 
-        if (!authResponse.IsSuccessStatusCode)
+        if (string.IsNullOrWhiteSpace(authResponse.Token))
         {
             return false;
         }
 
-        var authData = authResponse.Content;
-
-        if (string.IsNullOrWhiteSpace(authData.Token))
-        {
-            return false;
-        }
-
-        await CacheAuthTokens(authData);
+        await CacheAuthTokens(authResponse);
 
         // Get permissions for the current user and add them to the cache
-        var permissionsResponse = await _authClient.UserPermissions();
-
-        if (!permissionsResponse.IsSuccessStatusCode)
+        string[] permissions;
+        try
+        {
+            permissions = await _authClient.UserPermissions();
+        }
+        catch
         {
             return false;
         }
-
-        var permissions = permissionsResponse.Content;
 
         if (permissions.Contains("AccessAll"))
         {
@@ -92,7 +88,11 @@ public class JwtAuthenticationService : AuthenticationStateProvider, IAuthentica
 
     public async Task LogoutAsync()
     {
-        await _authClient.Logout();
+        try
+        {
+            await _authClient.Logout();
+        }
+        catch { }
         await ClearCacheAsync();
 
         NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
@@ -161,18 +161,17 @@ public class JwtAuthenticationService : AuthenticationStateProvider, IAuthentica
             return (false, null);
         }
 
-        var response = await _authClient.RefreshAuthentication(command);
+        try
+        {
+            var authData = await _authClient.RefreshAuthentication(command);
+            await CacheAuthTokens(authData);
 
-        if (!response.IsSuccessStatusCode)
+            return (true, authData);
+        }
+        catch
         {
             return (false, null);
         }
-
-        var authData = response.Content;
-
-        await CacheAuthTokens(authData);
-
-        return (true, authData);
     }
 
     private async ValueTask CacheAuthTokens(AuthenticateResponse response)
@@ -213,7 +212,7 @@ public class JwtAuthenticationService : AuthenticationStateProvider, IAuthentica
         var claims = new List<Claim>();
         string payload = jwt.Split('.')[1];
         byte[] jsonBytes = ParseBase64WithoutPadding(payload);
-        var keyValuePairs = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonBytes);
+        var keyValuePairs = JsonConvert.DeserializeObject<Dictionary<string, object>>(Encoding.UTF8.GetString(jsonBytes));
 
         if (keyValuePairs is not null)
         {
@@ -226,7 +225,7 @@ public class JwtAuthenticationService : AuthenticationStateProvider, IAuthentica
                 {
                     if (rolesString.Trim().StartsWith("["))
                     {
-                        string[]? parsedRoles = JsonSerializer.Deserialize<string[]>(rolesString);
+                        var parsedRoles = JsonConvert.DeserializeObject<string[]>(rolesString);
 
                         if (parsedRoles is not null)
                         {

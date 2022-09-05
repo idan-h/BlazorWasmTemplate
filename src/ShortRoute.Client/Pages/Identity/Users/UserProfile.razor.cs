@@ -54,7 +54,6 @@ public partial class UserProfile
         {
             _email = user.Email;
 
-            //_imageUrl = string.IsNullOrEmpty(user.ImageUrl) ? string.Empty : (Config[ConfigNames.ApiBaseUrl] + user.ImageUrl);
             Title = $"{_firstName} {_lastName}'s {_localizer["Profile"]}";
             Description = _email;
             if (_firstName?.Length > 0)

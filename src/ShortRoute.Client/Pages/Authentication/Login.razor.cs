@@ -59,9 +59,8 @@ public partial class Login
 
     private void FillAdministratorCredentials()
     {
-        //_tokenRequest.Email = MultitenancyConstants.Root.EmailAddress;
-        //_tokenRequest.Password = MultitenancyConstants.DefaultPassword;
-        //TenantId = MultitenancyConstants.Root.Id;
+        _tokenRequest.User = "super@g1.com";
+        _tokenRequest.Password = "Password123!";
     }
 
     private async Task SubmitAsync()
@@ -70,8 +69,7 @@ public partial class Login
 
         if (await ApiHelper.ExecuteClientCall(
             () => AuthService.LoginAsync(_tokenRequest),
-            Snackbar,
-            _customValidation))
+            Snackbar))
         {
             Snackbar.Add($"Logged in as {_tokenRequest.User}", Severity.Info);
         }

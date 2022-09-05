@@ -35,7 +35,6 @@ public partial class Security
         if (await ApiHelper.ExecuteClientCall(
             () => AccountClient.ChangePassword(_passwordModel),
             Snackbar,
-            _customValidation,
             L["Password Changed!"]))
         {
             _passwordModel.CurrentPassword = string.Empty;

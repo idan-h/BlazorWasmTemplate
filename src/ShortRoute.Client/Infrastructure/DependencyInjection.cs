@@ -16,8 +16,6 @@ namespace ShortRoute.Client.Infrastructure;
 
 public static class DependencyInjection
 {
-    private const string ClientName = "FullStackHero.API";
-
     public static IServiceCollection AddClientServices(this IServiceCollection services, IConfiguration config) =>
         services
         .AddLocalization(options => options.ResourcesPath = "Resources")

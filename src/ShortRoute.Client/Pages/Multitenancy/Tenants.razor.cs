@@ -45,7 +45,7 @@ public partial class Tenants
                 //new(tenant => tenant.ValidUpto.ToString("MMM dd, yyyy"), L["Valid Upto"]),
                 //new(tenant => tenant.IsActive, L["Active"], Type: typeof(bool))
             },
-            loadDataFunc: async () => _tenants = (await TenantsClient.TenantsGetList()).Content!.Select(t => new TenantModel(t, false)).ToList(),
+            loadDataFunc: async () => _tenants = (await TenantsClient.TenantsGetList()).Select(t => new TenantModel(t, false)).ToList(),
             searchFunc: (searchString, tenantDto) =>
                 string.IsNullOrWhiteSpace(searchString)
                     || tenantDto.Dto.TenantFullName!.Contains(searchString, StringComparison.OrdinalIgnoreCase),

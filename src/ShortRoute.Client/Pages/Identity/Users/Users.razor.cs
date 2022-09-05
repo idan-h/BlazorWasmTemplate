@@ -52,7 +52,7 @@ public partial class Users
                 new(user => user.Email, L["Email"]),
             },
             idFunc: user => user.UserId!,
-            loadDataFunc: async () => (await UsersClient.UsersGetList()).Content?.ToList(),
+            loadDataFunc: async () => (await UsersClient.UsersGetList()).ToList(),
             searchFunc: (searchString, user) =>
                 string.IsNullOrWhiteSpace(searchString)
                     || user.UserName?.Contains(searchString, StringComparison.OrdinalIgnoreCase) == true
@@ -62,10 +62,10 @@ public partial class Users
             exportPermission: string.Empty);
     }
 
-    private void ViewProfile(in Guid userId) =>
+    private void ViewProfile(in string userId) =>
         Navigation.NavigateTo($"/users/{userId}/profile");
 
-    private void ManageRoles(in Guid userId) =>
+    private void ManageRoles(in string userId) =>
         Navigation.NavigateTo($"/users/{userId}/roles");
 
     private void TogglePasswordVisibility()

@@ -12,13 +12,13 @@ public interface IAuthClient : IApiClient
     /// Authenticates the user by username and password
     /// </summary>
     [Post("/api/v1/auth")]
-    public Task<ApiResponse<AuthenticateResponse>> Authenticate(AuthenticateCommand authenticate);
+    public Task<AuthenticateResponse> Authenticate(AuthenticateCommand authenticate);
 
     /// <summary>
     /// Refreshes the authentication by an expired valid token and a refresh token
     /// </summary>
     [Post("/api/v1/refresh-auth")]
-    public Task<ApiResponse<AuthenticateResponse>> RefreshAuthentication(RefreshAuthenticationCommand refreshAuthentication);
+    public Task<AuthenticateResponse> RefreshAuthentication(RefreshAuthenticationCommand refreshAuthentication);
 
     /// <summary>
     /// Invalidates the last refresh token
@@ -30,11 +30,11 @@ public interface IAuthClient : IApiClient
     /// A list of all the current logged in user permissions
     /// </summary>
     [Post("/api/v1/user-permissions")]
-    public Task<ApiResponse<string[]>> UserPermissions();
+    public Task<string[]> UserPermissions();
 
     /// <summary>
     /// The authentication for hangfire
     /// </summary>
     [Post("/hangfire-auth")]
-    public Task<ApiResponse<string>> HangfireAuth(string token);
+    public Task<string> HangfireAuth();
 }
