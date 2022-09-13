@@ -23,7 +23,7 @@
         <PackageReference Include="MudBlazor" Version="6.0.14" />
 
         <PackageReference Include="Blazored.LocalStorage" Version="4.2.0" />
-        <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="6.0.7" />
+        <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="6.0.9" />
         <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
         <PackageReference Include="Microsoft.Authentication.WebAssembly.Msal" Version="6.0.7" />
         <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="6.0.1" />
@@ -36,6 +36,7 @@
         </PackageReference>
         <PackageReference Include="Refit" Version="6.3.2" />
         <PackageReference Include="Refit.HttpClientFactory" Version="6.3.2" />
+        <PackageReference Include="Riok.Mapperly" Version="2.4.0" />
     </ItemGroup>
 
     <ItemGroup>
