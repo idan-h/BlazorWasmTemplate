@@ -83,3 +83,7 @@
     bottom: calc(100% - 4px) !important;
     left: auto !important;
 }
+
+.red-on-hover:hover {
+    color: red!important;
+}

@@ -1,53 +1,77 @@
 ﻿@page "/users"
+@using ShortRoute.Client.Models.Users
 @using ShortRoute.Contracts.Dtos.Authentication
-@attribute [Authorize(Permissions.UserRead)]
+@using ShortRoute.Contracts.Queries.Authentication.Users
+@using ShortRoute.Contracts.Queries.Common
+@attribute [Authorize(Permissions.ReadUsers)]
 
 @inject IStringLocalizer<Users> L
 
 <FshTitle Title="@L["Users"]" Description="@L["Manage Users"]" />
 
-<EntityTable TEntity="UserDto" TId="string" TRequest="UserDto" Context="@Context">
+<EntityTable TEntity="UserDto" TId="string" TRequest="CreateUpdateUserModel" Context="@Context">
     <ExtraActions>
-        <MudMenuItem OnClick="(() => ViewProfile(context.UserId!))">@L["View Profile"]</MudMenuItem>
+        @*<MudMenuItem OnClick="(() => ViewProfile(context.Id!))">@L["View Profile"]</MudMenuItem>*@
         @if (_canViewRoles)
         {
-            <MudMenuItem OnClick="(() => ManageRoles(context.UserId!))">@L["Manage Roles"]</MudMenuItem>
+            <MudMenuItem OnClick="(() => ManageRoles(context.Id!))">@L["Manage Roles"]</MudMenuItem>
         }
     </ExtraActions>
 
     <EditFormContent>
-        <MudItem xs="12" md="6">
-            <MudTextField For="@(() => context.UserName)" @bind-Value="context.UserName" Label="@L["User Name"]" />
-        </MudItem>
-@*
-        <MudItem xs="12" md="6">
-            <MudTextField For="@(() => context.FirstName)" @bind-Value="context.FirstName" Label="@L["First Name"]" />
-        </MudItem>
-        <MudItem xs="12" md="6">
-            <MudTextField For="@(() => context.LastName)" @bind-Value="context.LastName" Label="@L["Last Name"]" />
-        </MudItem>
-*@
-        <MudItem xs="12" md="6">
-            <MudTextField For="@(() => context.Email)" InputType="InputType.Email" @bind-Value="context.Email"
-                Label="@L["Email"]" />
-        </MudItem>
-@*
-        <MudItem xs="12" md="12">
-            <MudTextField For="@(() => context.PhoneNumber)" @bind-Value="context.PhoneNumber"
-                Label="@L["Phone Number"]" />
-        </MudItem>
-*@
-@*
-        <MudItem xs="12" md="6">
-            <MudTextField For="@(() => context.Password)" @bind-Value="context.Password" Label="@L["Password"]"
-                InputType="@_passwordInput" Adornment="Adornment.End" AdornmentIcon="@_passwordInputIcon"
-                OnAdornmentClick="TogglePasswordVisibility" />
-        </MudItem>
-        <MudItem xs="12" md="6">
-            <MudTextField For="@(() => context.ConfirmPassword)" @bind-Value="context.ConfirmPassword"
-                Label="@L["Confirm Password"]" InputType="InputType.Password" />
-        </MudItem>
-*@
+
+        @* Add tenant list to choose from *@
+        @* Add roles *@
+
+        <div class="row">
+            @if (context.IsUpdate)
+            {
+                <div class="col-md-4">
+                    <MudTextField For="@(() => context.Id)" ReadOnly="true" Value="context.Id" Label="@L["Id"]" />
+                </div>
+            }
+            <div class="col-md-@(context.IsUpdate ? 4 : 6)">
+                <MudTextField For="@(() => context.Email)" ReadOnly="context.IsUpdate" InputType="InputType.Email"
+                    @bind-Value="context.Email" Label="@L["Email"]" />
+            </div>
+            @if (context.IsCreate)
+            {
+                <div class="col-md-6">
+                    <MudTextField For="@(() => context.TenantId)" @bind-Value="context.TenantId" Label="@L["TenantName"]" />
+                </div>
+            }
+            else
+            {
+                <div class="col-md-4">
+                    <MudTextField For="@(() => context.TenantName)" ReadOnly="true" Value="context.TenantName" Label="@L["TenantName"]" />
+                </div>
+            }
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <MudTextField For="@(() => context.FirstName)" @bind-Value="context.FirstName" Label="@L["First Name"]" />
+            </div>
+            <div class="col-md-6">
+                <MudTextField For="@(() => context.LastName)" @bind-Value="context.LastName" Label="@L["Last Name"]" />
+            </div>
+        </div>
+
+        @if (context.IsCreate)
+        {
+            <div class="row">
+                <div class="col-md-6">
+                    <MudTextField For="@(() => context.Password)" @bind-Value="context.Password" Label="@L["Password"]"
+                        InputType="@_passwordInput" Adornment="Adornment.End" AdornmentIcon="@_passwordInputIcon"
+                        OnAdornmentClick="TogglePasswordVisibility" />
+                </div>
+                <div class="col-md-6">
+                    <MudTextField For="@(() => context.ConfirmPassword)" @bind-Value="context.ConfirmPassword"
+                        Label="@L["Confirm Password"]" InputType="InputType.Password" />
+                </div>
+            </div>
+        }
+
     </EditFormContent>
 
 </EntityTable>

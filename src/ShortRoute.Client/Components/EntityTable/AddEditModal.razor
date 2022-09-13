@@ -21,12 +21,11 @@
 
         <DialogContent>
             <DataAnnotationsValidator />
-            <CustomValidation @ref="_customValidation" />
-            <MudGrid>
-
+            
+            <div class="container">
                 @ChildContent(RequestModel)
+            </div>
 
-            </MudGrid>
         </DialogContent>
 
         <DialogActions>

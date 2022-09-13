@@ -7,6 +7,7 @@ using ShortRoute.Client.Infrastructure.Auth.Extensions;
 using ShortRoute.Contracts.Auth;
 using ShortRoute.Client.Infrastructure.ApiClient.v1;
 using ShortRoute.Contracts.Dtos.Authentication;
+using ShortRoute.Client.Models.Generic;
 
 namespace ShortRoute.Client.Pages.Identity.Roles;
 
@@ -26,12 +27,12 @@ public partial class Roles
     protected override async Task OnInitializedAsync()
     {
         var state = await AuthState;
-        _canViewRoleClaims = await AuthService.HasPermissionAsync(state.User, Permissions.RoleRead);
+        _canViewRoleClaims = await AuthService.HasPermissionAsync(state.User, Permissions.ReadRoles);
 
         Context = new(
             entityName: L["Role"],
             entityNamePlural: L["Roles"],
-            searchPermission: Permissions.RoleRead,
+            searchPermission: Permissions.ReadRoles,
             fields: new()
             {
                 new(role => role.RoleName, L["Name"]),

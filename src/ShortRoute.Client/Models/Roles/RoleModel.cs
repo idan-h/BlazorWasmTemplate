@@ -1,6 +1,6 @@
 ﻿using ShortRoute.Contracts.Dtos.Authentication;
 
-namespace ShortRoute.Client.Models;
+namespace ShortRoute.Client.Models.Roles;
 
 public class RoleModel
 {

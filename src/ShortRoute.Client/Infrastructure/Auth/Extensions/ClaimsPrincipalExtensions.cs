@@ -2,20 +2,21 @@
 
 public static class ClaimsPrincipalExtensions
 {
+    private static class AppClaimTypes
+    {
+        public const string Id = "nameid";
+        public const string Name = "unique_name";
+        public const string Email = "email";
+    }
+
     public static string? GetEmail(this ClaimsPrincipal principal)
-        => principal.FindFirstValue(ClaimTypes.Email);
+        => principal.FindFirstValue(AppClaimTypes.Email/*ClaimTypes.Email*/);
 
     public static string? GetFullName(this ClaimsPrincipal principal)
-        => principal?.FindFirst(ClaimTypes.Name)?.Value;
-
-    public static string? GetSurname(this ClaimsPrincipal principal)
-        => principal?.FindFirst(ClaimTypes.Surname)?.Value;
-
-    public static string? GetPhoneNumber(this ClaimsPrincipal principal)
-        => principal.FindFirstValue(ClaimTypes.MobilePhone);
+        => principal?.FindFirst(AppClaimTypes.Name/*ClaimTypes.Name*/)?.Value;
 
     public static string? GetUserId(this ClaimsPrincipal principal)
-       => principal.FindFirstValue(ClaimTypes.NameIdentifier);
+       => principal.FindFirstValue(AppClaimTypes.Id/*ClaimTypes.NameIdentifier*/);
 
     public static string? GetImageUrl(this ClaimsPrincipal principal)
        => principal.FindFirstValue(ClaimTypes.UserData);

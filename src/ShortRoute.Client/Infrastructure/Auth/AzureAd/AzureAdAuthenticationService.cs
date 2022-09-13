@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using ShortRoute.Client.Infrastructure.Auth.Enums;
 using ShortRoute.Contracts.Commands.Authentication;
+using ShortRoute.Contracts.Commands.Authentication.Login;
 
 namespace ShortRoute.Client.Infrastructure.Auth.AzureAd;
 

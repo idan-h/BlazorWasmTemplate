@@ -27,9 +27,6 @@ public partial class Profile
     private string? _imageUrl;
     private string? _userId;
     private char _firstLetterOfName;
-
-    private CustomValidation? _customValidation;
-
     protected override async Task OnInitializedAsync()
     {
         if ((await AuthState).User is { } user)
@@ -52,7 +49,7 @@ public partial class Profile
     private async Task UpdateProfileAsync()
     {
         //if (await ApiHelper.ExecuteClientCall(
-        //    () => PersonalClient.UpdateProfileAsync(_profileModel), Snackbar, _customValidation))
+        //    () => PersonalClient.UpdateProfileAsync(_profileModel), Snackbar))
         //{
         //    Snackbar.Add(L["Your Profile has been updated. Please Login again to Continue."], Severity.Success);
         //    await AuthService.ReLoginAsync(Navigation.Uri);

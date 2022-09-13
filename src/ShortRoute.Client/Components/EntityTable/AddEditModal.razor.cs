@@ -29,8 +29,6 @@ public partial class AddEditModal<TRequest> : IAddEditModal<TRequest>
     [CascadingParameter]
     private MudDialogInstance MudDialog { get; set; } = default!;
 
-    private CustomValidation? _customValidation;
-
     public void ForceRender() => StateHasChanged();
 
     protected override Task OnInitializedAsync() =>

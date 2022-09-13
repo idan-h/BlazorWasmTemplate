@@ -9,6 +9,8 @@ using ShortRoute.Client.Infrastructure.Auth.Enums;
 using ShortRoute.Contracts.Auth;
 using Newtonsoft.Json;
 using System.Text;
+using ShortRoute.Contracts.Commands.Authentication.Login;
+using ShortRoute.Contracts.Responses.Authentication.Login;
 
 namespace ShortRoute.Client.Infrastructure.Auth.Jwt;
 
@@ -86,7 +88,7 @@ public class JwtAuthenticationService : AuthenticationStateProvider, IAuthentica
         return true;
     }
 
-    public async Task LogoutAsync()
+    public async Task LogoutAsync(bool logoutFromServer)
     {
         try
         {
@@ -96,7 +98,11 @@ public class JwtAuthenticationService : AuthenticationStateProvider, IAuthentica
         await ClearCacheAsync();
 
         NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
+    }
 
+    public async Task LogoutAsync()
+    {
+        await LogoutAsync(true);
         _navigation.NavigateTo("/login");
     }
 
@@ -128,6 +134,7 @@ public class JwtAuthenticationService : AuthenticationStateProvider, IAuthentica
                 (bool succeeded, var response) = await TryRefreshTokenAsync(new() { Token = token });
                 if (!succeeded)
                 {
+                    await LogoutAsync(false);
                     return new AccessTokenResult(AccessTokenResultStatus.RequiresRedirect, null, "/login");
                 }
 
@@ -148,8 +155,8 @@ public class JwtAuthenticationService : AuthenticationStateProvider, IAuthentica
     private async Task<(bool Succeeded, AuthenticateResponse? Token)> TryRefreshTokenAsync(RefreshAuthenticationCommand command)
     {
         var authState = await GetAuthenticationStateAsync();
-        var userId = authState.User.GetUserId();
-        if (string.IsNullOrWhiteSpace(userId))
+
+        if (string.IsNullOrWhiteSpace(command.Token))
         {
             throw new InvalidOperationException("Can't refresh token when user is not logged in!");
         }

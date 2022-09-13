@@ -1,5 +1,5 @@
 ﻿@page "/users/{Id}/profile"
-@attribute [Authorize(Permissions.UserRead)]
+@attribute [Authorize(Permissions.ReadUsers)]
 
 @inject IStringLocalizer<UserProfile> _localizer
 

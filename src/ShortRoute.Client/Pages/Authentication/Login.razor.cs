@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Components.Authorization;
 using MudBlazor;
 using ShortRoute.Client.Infrastructure.Auth;
 using ShortRoute.Client.Infrastructure.Auth.Enums;
-using ShortRoute.Contracts.Commands.Authentication;
+using ShortRoute.Contracts.Commands.Authentication.Login;
 
 namespace ShortRoute.Client.Pages.Authentication;
 
@@ -16,8 +16,6 @@ public partial class Login
     public Task<AuthenticationState> AuthState { get; set; } = default!;
     [Inject]
     public IAuthenticationService AuthService { get; set; } = default!;
-
-    private CustomValidation? _customValidation;
 
     public bool BusySubmitting { get; set; }
 

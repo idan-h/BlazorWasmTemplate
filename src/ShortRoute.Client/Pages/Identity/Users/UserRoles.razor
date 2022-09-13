@@ -1,7 +1,7 @@
 ﻿@page "/users/{Id}/roles"
-@using ShortRoute.Client.Models
+@using ShortRoute.Client.Models.Roles
 @using ShortRoute.Contracts.Dtos.Authentication
-@attribute [Authorize(Permissions.UserRead)]
+@attribute [Authorize(Permissions.ReadUsers)]
 
 @inject IStringLocalizer<UserRoles> L
 

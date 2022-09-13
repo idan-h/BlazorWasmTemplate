@@ -1,7 +1,8 @@
 ﻿@page "/tenants"
-@using ShortRoute.Client.Models
+@using ShortRoute.Client.Models.Generic
+@using ShortRoute.Client.Models.Tenants
 @using ShortRoute.Contracts.Dtos.Authentication
-@attribute [Authorize(Permissions.TenantList)]
+@attribute [Authorize(Permissions.ReadTenants)]
 
 @inject IStringLocalizer<Tenants> L
 @inject IAuthenticationService Authentication
@@ -12,10 +13,10 @@
     @bind-SearchString="_searchString">
     <EditFormContent>
         <MudItem xs="12" md="6">
-            <MudTextField T="int" For="@(() => context.TenantId)" @bind-Value="context.TenantId" Label="@L["Key"]" />
+            <MudTextField T="int" @bind-Value="context.TenantId" Label="@L["Key"]" />
         </MudItem>
         <MudItem xs="12" md="6">
-            <MudTextField T="string" For="@(() => context.TenantFullName)" @bind-Value="context.TenantFullName" Label="@L["Name"]" />
+            <MudTextField T="string" @bind-Value="context.TenantFullName" Label="@L["Name"]" />
         </MudItem>
     </EditFormContent>
     <ExtraActions>

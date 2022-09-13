@@ -9,7 +9,6 @@ namespace ShortRoute.Client.Pages.Authentication;
 public partial class SelfRegister
 {
     //private readonly CreateUserRequest _createUserRequest = new();
-    private CustomValidation? _customValidation;
     private bool BusySubmitting { get; set; }
 
     //[Inject]
@@ -25,8 +24,7 @@ public partial class SelfRegister
 
         //string? sucessMessage = await ApiHelper.ExecuteClientCall(
         //    () => UsersClient.SelfRegisterAsync(Tenant, _createUserRequest),
-        //    Snackbar,
-        //    _customValidation);
+        //    Snackbar);
 
         //if (sucessMessage != null)
         //{

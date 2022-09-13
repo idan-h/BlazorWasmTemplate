@@ -1,6 +1,6 @@
 ﻿@page "/roles/{Id}/permissions"
-@using ShortRoute.Client.Models
-@attribute [Authorize(Permissions.RoleRead)]
+@using ShortRoute.Client.Models.Roles
+@attribute [Authorize(Permissions.ReadPermission)]
 
 @inject IStringLocalizer<RolePermissions> L
 

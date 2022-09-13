@@ -3,8 +3,8 @@ using ShortRoute.Client.Infrastructure.ApiClient;
 using ShortRoute.Client.Shared;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
-using ShortRoute.Contracts.Commands.App.Account;
 using ShortRoute.Client.Infrastructure.ApiClient.v1;
+using ShortRoute.Contracts.Commands.Authentication.Account;
 
 namespace ShortRoute.Client.Pages.Identity.Account;
 
@@ -16,19 +16,11 @@ public partial class Security
     private readonly ChangePasswordCommand _passwordModel = new();
     private string _confirmedPassword;
 
-    private CustomValidation? _customValidation;
-
     private async Task ChangePasswordAsync()
     {
         if (_passwordModel.NewPassword != _confirmedPassword)
         {
-            _customValidation?.DisplayErrors(new Dictionary<string, ICollection<string>>
-            {
-                [nameof(_passwordModel.NewPassword)] = new[]
-                {
-                    L["Passwords don't match"].Value,
-                }
-            });
+            Snackbar.Add(L["Passwords don't match"], Severity.Error);
             return;
         }
 

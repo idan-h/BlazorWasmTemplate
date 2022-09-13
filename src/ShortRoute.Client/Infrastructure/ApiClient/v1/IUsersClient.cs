@@ -1,7 +1,8 @@
 ﻿using Refit;
 using ShortRoute.Client.Infrastructure.ApiClient.Base;
-using ShortRoute.Contracts.Commands.Authentication;
+using ShortRoute.Contracts.Commands.Authentication.Users;
 using ShortRoute.Contracts.Dtos.Authentication;
+using ShortRoute.Contracts.Responses.Authentication.Users;
 
 namespace ShortRoute.Client.Infrastructure.ApiClient.v1;
 
@@ -11,13 +12,19 @@ public interface IUsersClient : IApiClient
     /// Gets a list of all the users availbale filtered by current user's tenant
     /// </summary>
     [Get("/api/v1/users")]
-    public Task<UserDto[]> UsersGetList();
+    public Task<GetUsersResponse> UsersGetList(string? pagination = null, string? filter = null, string? sort = null);
+
+    /// <summary>
+    /// Creates a user
+    /// </summary>
+    [Post("/api/v1/users")]
+    public Task UsersCreate(CreateUserCommand createUser);
 
     /// <summary>
     /// Updates a user
     /// </summary>
     [Put("/api/v1/users")]
-    public Task UsersUpdate(UserDto user);
+    public Task UsersUpdate(UpdateUserCommand updateUser);
 
     /// <summary>
     /// Gets a single user by id
@@ -32,6 +39,18 @@ public interface IUsersClient : IApiClient
     public Task UsersDelete(string id);
 
     /// <summary>
+    /// List of all the available roles for updating the user
+    /// </summary>
+    [Get("/api/v1/users/roles/{tenantId}")]
+    public Task<string[]> UsersRolesGet(int? tenantId);
+
+    /// <summary>
+    /// Changes the user to disabled or active
+    /// </summary>
+    [Put("/api/v1/users/active")]
+    public Task UsersChangeActive(ChangeUserActiveCommand changeUserActive);
+
+    /// <summary>
     /// Sends an invitation to a user for the current user's tenant
     /// </summary>
     [Post("/api/v1/users/invite")]
@@ -42,16 +61,4 @@ public interface IUsersClient : IApiClient
     /// </summary>
     [Post("/api/v1/users/accept-invite")]
     public Task<string> AcceptInvitationPost(AcceptInvitationDto acceptInvitation);
-
-    /// <summary>
-    /// Accepts the invitation - returns back the code, for test purposes only
-    /// </summary>
-    [Get("/api/v1/users/accept-invite")]
-    public Task<string> AcceptInvitationGet();
-
-    /// <summary>
-    /// Syncs the users with the login provider's users
-    /// </summary>
-    [Post("/api/v1/users/sync")]
-    public Task SyncUsers();
 }

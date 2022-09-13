@@ -30,10 +30,10 @@ public partial class NavMenu
         var user = (await AuthState).User;
         _canViewHangfire = await AuthService.HasPermissionAsync(user, Permissions.Hangfire);
         _canViewDashboard = true;// await AuthService.HasPermissionAsync(user, Permissions.);
-        _canViewRoles = await AuthService.HasPermissionAsync(user, Permissions.RoleRead);
-        _canViewUsers = await AuthService.HasPermissionAsync(user, Permissions.UserRead);
+        _canViewRoles = await AuthService.HasPermissionAsync(user, Permissions.ReadRoles);
+        _canViewUsers = await AuthService.HasPermissionAsync(user, Permissions.ReadUsers);
         _canViewProducts = true;// await AuthService.HasPermissionAsync(user, Permissions.);
         _canViewBrands = true;// await AuthService.HasPermissionAsync(user, FSHAction.View, FSHResource.Brands);
-        _canViewTenants = await AuthService.HasPermissionAsync(user, Permissions.TenantList);
+        _canViewTenants = await AuthService.HasPermissionAsync(user, Permissions.ReadTenants);
     }
 }

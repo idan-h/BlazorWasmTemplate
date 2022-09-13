@@ -1,1 +1,3 @@
-﻿<MudAlert Severity="Severity.Warning">Oopsie !! 😔</MudAlert>
+﻿@inject IStringLocalizer<SharedResource> L
+
+<MudAlert Severity="Severity.Warning">@L["An error has occured, please refresh and try again"] 😔</MudAlert>

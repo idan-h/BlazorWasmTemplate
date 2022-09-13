@@ -8,8 +8,9 @@ using MudBlazor;
 using ShortRoute.Client.Infrastructure.Auth.Extensions;
 using ShortRoute.Contracts.Dtos.Authentication;
 using ShortRoute.Client.Infrastructure.ApiClient.v1;
-using ShortRoute.Client.Models;
 using ShortRoute.Contracts.Auth;
+using ShortRoute.Client.Models.Tenants;
+using ShortRoute.Client.Models.Generic;
 
 namespace ShortRoute.Client.Pages.Multitenancy;
 
@@ -34,7 +35,7 @@ public partial class Tenants
         Context = new(
             entityName: L["Tenant"],
             entityNamePlural: L["Tenants"],
-            searchPermission: Permissions.TenantList,
+            searchPermission: Permissions.ReadTenants,
             deletePermission: string.Empty,
             updatePermission: string.Empty,
             fields: new()
@@ -54,7 +55,7 @@ public partial class Tenants
 
         var state = await AuthState;
         //_canUpgrade = await AuthService.HasPermissionAsync(state.User, FSHAction.UpgradeSubscription, FSHResource.Tenants);
-        _canModify = await AuthService.HasPermissionAsync(state.User, Permissions.TenantUpdate);
+        _canModify = await AuthService.HasPermissionAsync(state.User, Permissions.UpdateTenants);
     }
 
     private async Task ViewUpgradeSubscriptionModalAsync(int id)

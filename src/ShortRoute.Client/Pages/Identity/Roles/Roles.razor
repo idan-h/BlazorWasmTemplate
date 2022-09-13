@@ -1,11 +1,11 @@
 ﻿@page "/roles"
-@attribute [Authorize(Permissions.RoleRead)]
+@attribute [Authorize(Permissions.ReadRoles)]
 
 @inject IStringLocalizer<Roles> L
 
 <FshTitle Title="@L["Roles"]" Description="@L["Manage Roles."]" />
 
-@*<EntityTable TEntity="RoleDto" TId="string" TRequest="CreateOrUpdateRoleRequest" Context="@Context">
+@*<EntityTable TEntity="RoleDto" TId="string" TRequest="RoleDto" Context="@Context">
 
     <ExtraActions>
         @if (_canViewRoleClaims)

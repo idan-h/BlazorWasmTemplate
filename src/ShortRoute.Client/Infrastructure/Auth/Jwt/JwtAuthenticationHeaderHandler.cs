@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication.Internal;
 using ShortRoute.Client.Infrastructure.Common;
+using System.Net;
 
 namespace ShortRoute.Client.Infrastructure.Auth.Jwt;
 
@@ -19,6 +20,7 @@ public class JwtAuthenticationHeaderHandler : DelegatingHandler
     {
         // skip token endpoints
         if (request.RequestUri?.AbsolutePath.Contains("/auth") is not true
+            && request.RequestUri?.AbsolutePath.Contains("/refresh-auth") is not true
             && request.RequestUri?.AbsolutePath.Contains("/logout") is not true)
         {
             if (await _tokenProviderAccessor.TokenProvider.GetAccessTokenAsync() is string token)
@@ -27,7 +29,8 @@ public class JwtAuthenticationHeaderHandler : DelegatingHandler
             }
             else
             {
-                _navigation.NavigateTo("/login");
+                _navigation.NavigateTo("/login", true);
+                return new HttpResponseMessage(HttpStatusCode.Unauthorized);
             }
         }
 

@@ -1,4 +1,5 @@
 ﻿using ShortRoute.Client.Infrastructure.ApiClient;
+using ShortRoute.Contracts.Queries.Common;
 
 namespace ShortRoute.Client.Components.EntityTable;
 
@@ -6,33 +7,41 @@ namespace ShortRoute.Client.Components.EntityTable;
 /// Initialization Context for the EntityTable Component.
 /// Use this one if you want to use Server Paging, Sorting and Filtering.
 /// </summary>
-public class EntityServerTableContext<TEntity, TId, TRequest, TPagination>
-    : EntityTableContext<TEntity, TId, TRequest, TPagination>
+public class EntityServerTableContext<TEntity, TId, TCreateUpdateRequest>
+    : EntityTableContext<TEntity, TId, TCreateUpdateRequest>
 {
     /// <summary>
     /// A function that loads the specified page from the api with the specified search criteria
     /// and returns a PaginatedResult of TEntity.
     /// </summary>
-    public Func<TPagination, Task<PaginationResponse<TEntity>>> SearchFunc { get; }
+    public Func<GeneralFilter, Task<PaginationResponse<TEntity>>> SearchFunc { get; }
 
     /// <summary>
     /// A function that exports the specified data from the API.
     /// </summary>
-    //public Func<BaseFilter, Task<FileResponse>>? ExportFunc { get; }
+    public Func<GeneralFilter, Task<HttpContent>>? ExportFunc { get; }
 
     public bool EnableAdvancedSearch { get; }
 
+    public bool EnableSort { get; }
+
+    public Type? PaginationType { get; }
+
     public EntityServerTableContext(
         List<EntityField<TEntity>> fields,
-        Func<TPagination, Task<PaginationResponse<TEntity>>> searchFunc,
-        //Func<BaseFilter, Task<FileResponse>>? exportFunc = null,
+        Func<GeneralFilter, Task<PaginationResponse<TEntity>>> searchFunc,
+        Func<GeneralFilter, Task<HttpContent>>? exportFunc = null,
         bool enableAdvancedSearch = false,
+        bool enableSort = true,
+        Type? paginationType = null,
+
         Func<TEntity, TId>? idFunc = null,
-        Func<Task<TRequest>>? getDefaultsFunc = null,
-        Func<TRequest, Task>? createFunc = null,
-        Func<TId, Task<TRequest>>? getDetailsFunc = null,
-        Func<TId, TRequest, Task>? updateFunc = null,
+        Func<Task<TCreateUpdateRequest>>? getDefaultsFunc = null,
+        Func<TCreateUpdateRequest, Task>? createFunc = null,
+        Func<TId, Task<TCreateUpdateRequest>>? getDetailsFunc = null,
+        Func<TId, TCreateUpdateRequest, Task>? updateFunc = null,
         Func<TId, Task>? deleteFunc = null,
+
         string? entityName = null,
         string? entityNamePlural = null,
         string searchPermission = "",
@@ -65,7 +74,9 @@ public class EntityServerTableContext<TEntity, TId, TRequest, TPagination>
             canDeleteEntityFunc)
     {
         SearchFunc = searchFunc;
-        //ExportFunc = exportFunc;
+        ExportFunc = exportFunc;
         EnableAdvancedSearch = enableAdvancedSearch;
+        EnableSort = enableSort;
+        PaginationType = paginationType;
     }
 }

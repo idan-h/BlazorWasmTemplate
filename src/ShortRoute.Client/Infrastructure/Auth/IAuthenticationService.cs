@@ -1,6 +1,6 @@
 using ShortRoute.Client.Infrastructure.ApiClient;
 using ShortRoute.Client.Infrastructure.Auth.Enums;
-using ShortRoute.Contracts.Commands.Authentication;
+using ShortRoute.Contracts.Commands.Authentication.Login;
 
 namespace ShortRoute.Client.Infrastructure.Auth;
 

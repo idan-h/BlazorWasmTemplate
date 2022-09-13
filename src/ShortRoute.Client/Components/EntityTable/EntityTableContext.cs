@@ -7,9 +7,8 @@ namespace ShortRoute.Client.Components.EntityTable;
 /// </summary>
 /// <typeparam name="TEntity">The type of the entity.</typeparam>
 /// <typeparam name="TId">The type of the id of the entity.</typeparam>
-/// <typeparam name="TRequest">The type of the Request which is used on the AddEditModal and which is sent with the CreateFunc and UpdateFunc.</typeparam>
-/// <typeparam name="TPagination">The type of the pagination model.</typeparam>
-public abstract class EntityTableContext<TEntity, TId, TRequest, TPagination>
+/// <typeparam name="TCreateUpdateRequest">The request which updates or creates.</typeparam>
+public abstract class EntityTableContext<TEntity, TId, TCreateUpdateRequest>
 {
     /// <summary>
     /// The columns you want to display on the table.
@@ -23,30 +22,29 @@ public abstract class EntityTableContext<TEntity, TId, TRequest, TPagination>
 
     /// <summary>
     /// A function that executes the GetDefaults method on the api (or supplies defaults locally) and returns
-    /// a Task of Result of TRequest. When not supplied, a TRequest is simply newed up.
+    /// a Task of Result of the create request. Must be supplied to use <see cref="CreateFunc"/>.
     /// No need to check for error messages or api exceptions. These are automatically handled by the component.
     /// </summary>
-    public Func<Task<TRequest>>? GetDefaultsFunc { get; }
+    public Func<Task<TCreateUpdateRequest>>? GetDefaultsFunc { get; }
 
     /// <summary>
     /// A function that executes the Create method on the api with the supplied entity and returns a Task of Result.
     /// No need to check for error messages or api exceptions. These are automatically handled by the component.
     /// </summary>
-    public Func<TRequest, Task>? CreateFunc { get; }
+    public Func<TCreateUpdateRequest, Task>? CreateFunc { get; }
 
     /// <summary>
-    /// A function that executes the GetDetails method on the api with the supplied Id and returns a Task of Result of TRequest.
+    /// A function that executes the GetDetails method on the api with the supplied Id and returns a Task of Result of the update request.
     /// No need to check for error messages or api exceptions. These are automatically handled by the component.
-    /// When not supplied, the TEntity out of the _entityList is supplied using the IdFunc and converted using mapster.
     /// </summary>
-    public Func<TId, Task<TRequest>>? GetDetailsFunc { get; }
+    public Func<TId, Task<TCreateUpdateRequest>>? GetDetailsFunc { get; }
 
     /// <summary>
     /// A function that executes the Update method on the api with the supplied entity and returns a Task of Result.
     /// When not supplied, the TEntity from the list is mapped to TCreateRequest using mapster.
     /// No need to check for error messages or api exceptions. These are automatically handled by the component.
     /// </summary>
-    public Func<TId, TRequest, Task>? UpdateFunc { get; }
+    public Func<TId, TCreateUpdateRequest, Task>? UpdateFunc { get; }
 
     /// <summary>
     /// A function that executes the Delete method on the api with the supplied entity id and returns a Task of Result.
@@ -125,10 +123,10 @@ public abstract class EntityTableContext<TEntity, TId, TRequest, TPagination>
     public EntityTableContext(
         List<EntityField<TEntity>> fields,
         Func<TEntity, TId>? idFunc,
-        Func<Task<TRequest>>? getDefaultsFunc,
-        Func<TRequest, Task>? createFunc,
-        Func<TId, Task<TRequest>>? getDetailsFunc,
-        Func<TId, TRequest, Task>? updateFunc,
+        Func<Task<TCreateUpdateRequest>>? getDefaultsFunc,
+        Func<TCreateUpdateRequest, Task>? createFunc,
+        Func<TId, Task<TCreateUpdateRequest>>? getDetailsFunc,
+        Func<TId, TCreateUpdateRequest, Task>? updateFunc,
         Func<TId, Task>? deleteFunc,
         string? entityName,
         string? entityNamePlural,
@@ -168,13 +166,13 @@ public abstract class EntityTableContext<TEntity, TId, TRequest, TPagination>
     internal void SetAddEditModalRef(IDialogReference dialog) =>
         _addEditModalRef = dialog;
 
-    public IAddEditModal<TRequest> AddEditModal =>
-        _addEditModalRef?.Dialog as IAddEditModal<TRequest>
+    public IAddEditModal<TCreateUpdateRequest> AddEditModal =>
+        _addEditModalRef?.Dialog as IAddEditModal<TCreateUpdateRequest>
         ?? throw new InvalidOperationException("AddEditModal is only available when the modal is shown.");
 
     // Shortcuts
-    public EntityClientTableContext<TEntity, TId, TRequest>? ClientContext => this as EntityClientTableContext<TEntity, TId, TRequest>;
-    public EntityServerTableContext<TEntity, TId, TRequest, TPagination>? ServerContext => this as EntityServerTableContext<TEntity, TId, TRequest, TPagination>;
+    public EntityClientTableContext<TEntity, TId, TCreateUpdateRequest>? ClientContext => this as EntityClientTableContext<TEntity, TId, TCreateUpdateRequest>;
+    public EntityServerTableContext<TEntity, TId, TCreateUpdateRequest>? ServerContext => this as EntityServerTableContext<TEntity, TId, TCreateUpdateRequest>;
     public bool IsClientContext => ClientContext is not null;
     public bool IsServerContext => ServerContext is not null;
 

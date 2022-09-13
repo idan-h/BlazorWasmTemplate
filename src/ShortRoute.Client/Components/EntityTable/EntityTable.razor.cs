@@ -8,6 +8,8 @@ using Microsoft.JSInterop;
 using MudBlazor;
 using ShortRoute.Client.Infrastructure.Auth.Extensions;
 using ShortRoute.Client.Models;
+using ShortRoute.Contracts.Queries.Common;
+using ShortRoute.Client.Mappings.Generic;
 
 namespace ShortRoute.Client.Components.EntityTable;
 
@@ -16,7 +18,7 @@ public partial class EntityTable<TEntity, TId, TRequest>
 {
     [Parameter]
     [EditorRequired]
-    public EntityTableContext<TEntity, TId, TRequest, NullType> Context { get; set; } = default!;
+    public EntityTableContext<TEntity, TId, TRequest> Context { get; set; } = default!;
 
     [Parameter]
     public bool Loading { get; set; }
@@ -56,6 +58,10 @@ public partial class EntityTable<TEntity, TId, TRequest>
     private IEnumerable<TEntity>? _entityList;
     private int _totalItems;
 
+    private Sort? _lastSort;
+    private int? _lastPage;
+    private string? _lastPageLastId;
+
     protected override async Task OnInitializedAsync()
     {
         var state = await AuthState;
@@ -83,7 +89,7 @@ public partial class EntityTable<TEntity, TId, TRequest>
         return action.ToLower() == "true" || await AuthService.HasPermissionAsync(state.User, action);
     }
 
-    private bool HasActions => _canUpdate || _canDelete || (Context.HasExtraActionsFunc is not null && Context.HasExtraActionsFunc());
+    private bool HasActions => _canUpdate || _canDelete || (Context.HasExtraActionsFunc?.Invoke() ?? false);
     private bool CanUpdateEntity(TEntity entity) => _canUpdate && (Context.CanUpdateEntityFunc is null || Context.CanUpdateEntityFunc(entity));
     private bool CanDeleteEntity(TEntity entity) => _canDelete && (Context.CanDeleteEntityFunc is null || Context.CanDeleteEntityFunc(entity));
 
@@ -118,6 +124,13 @@ public partial class EntityTable<TEntity, TId, TRequest>
     {
         await SearchStringChanged.InvokeAsync(SearchString);
 
+        // Check if the user is still typing and when he stops load the data from the server
+        await Task.Delay(500);
+        if (SearchString != text)
+        {
+            return;
+        }
+
         await ServerLoadDataAsync();
     }
 
@@ -134,101 +147,129 @@ public partial class EntityTable<TEntity, TId, TRequest>
 
     private async Task<TableData<TEntity>> ServerReload(TableState state)
     {
-        //if (!Loading && Context.ServerContext is not null)
-        //{
-        //    Loading = true;
+        if (!Loading && Context.ServerContext is not null)
+        {
+            Loading = true;
 
-        //    var filter = GetPaginationFilter(state);
+            var filter = GetFilter(state);
 
-        //    if (await ApiHelper.ExecuteCallGuardedAsync(
-        //            () => Context.ServerContext.SearchFunc(filter), Snackbar)
-        //        is { } result)
-        //    {
-        //        _totalItems = result.TotalCount;
-        //        _entityList = result.Data;
-        //    }
+            if (await ApiHelper.ExecuteClientCall(
+                    () => Context.ServerContext.SearchFunc(filter), Snackbar)
+                is { } result)
+            {
+                _totalItems = result.TotalCount;
+                _entityList = result.Data;
+            }
 
-        //    Loading = false;
-        //}
+            Loading = false;
+        }
 
-        //return new TableData<TEntity> { TotalItems = _totalItems, Items = _entityList };
-
-        return new TableData<TEntity>();
+        return new TableData<TEntity> { TotalItems = _totalItems, Items = _entityList };
     }
 
     private async Task ExportAsync()
     {
-        //if (!Loading && Context.ServerContext is not null)
-        //{
-        //    if (Context.ServerContext.ExportFunc is not null)
-        //    {
-        //        Loading = true;
+        if (!Loading && Context.ServerContext is not null)
+        {
+            if (Context.ServerContext.ExportFunc is not null)
+            {
+                Loading = true;
 
-        //        var filter = GetBaseFilter();
+                var filter = GetFilter();
 
-        //        if (await ApiHelper.ExecuteCallGuardedAsync(
-        //                () => Context.ServerContext.ExportFunc(filter), Snackbar)
-        //            is { } result)
-        //        {
-        //            using var streamRef = new DotNetStreamReference(result.Stream);
-        //            await JS.InvokeVoidAsync("downloadFileFromStream", $"{Context.EntityNamePlural}.xlsx", streamRef);
-        //        }
+                if (await ApiHelper.ExecuteClientCall(() => Context.ServerContext.ExportFunc(filter), Snackbar)
+                    is { } result)
+                {
+                    try
+                    {
+                        using var streamRef = new DotNetStreamReference(await result.ReadAsStreamAsync());
+                        await JS.InvokeVoidAsync("downloadFileFromStream", $"{Context.EntityNamePlural}.xlsx", streamRef);
+                    }
+                    catch
+                    {
+                        Snackbar.Add(L["Error has occured while downloading"], Severity.Error);
+                    }
+                }
 
-        //        Loading = false;
-        //    }
-        //}
+                Loading = false;
+            }
+        }
     }
 
-    //private PaginationFilter GetPaginationFilter(TableState state)
-    //{
-    //    string[]? orderings = null;
-    //    if (!string.IsNullOrEmpty(state.SortLabel))
-    //    {
-    //        orderings = state.SortDirection == SortDirection.None
-    //            ? new[] { $"{state.SortLabel}" }
-    //            : new[] { $"{state.SortLabel} {state.SortDirection}" };
-    //    }
+    private GeneralFilter GetFilter(TableState state)
+    {
+        string[]? orderings = null;
+        if (!string.IsNullOrEmpty(state.SortLabel))
+        {
+            orderings = new[] { state.SortLabel + (state.SortDirection == SortDirection.Descending ? "*" : "") };
+        }
 
-    //    var filter = new PaginationFilter
-    //    {
-    //        PageSize = state.PageSize,
-    //        PageNumber = state.Page + 1,
-    //        Keyword = SearchString,
-    //        OrderBy = orderings ?? Array.Empty<string>()
-    //    };
+        _lastSort = new Sort { Fields = orderings ?? Enumerable.Empty<string>() };
 
-    //    if (!Context.AllColumnsChecked)
-    //    {
-    //        filter.AdvancedSearch = new()
-    //        {
-    //            Fields = Context.SearchFields,
-    //            Keyword = filter.Keyword
-    //        };
-    //        filter.Keyword = null;
-    //    }
+        IPagination? pagination = null;
+        if (Context.ServerContext?.PaginationType == typeof(IdPagination))
+        {
+            string? currentPageLastId = null;
+            if (_entityList?.Any() == true && Context.ServerContext?.IdFunc is not null)
+            {
+                var entity = _entityList.Last();
+                currentPageLastId = Context.ServerContext.IdFunc.Invoke(entity)?.ToString();
 
-    //    return filter;
-    //}
+            }
 
-    //private BaseFilter GetBaseFilter()
-    //{
-    //    var filter = new BaseFilter
-    //    {
-    //        Keyword = SearchString,
-    //    };
+            pagination = new IdPagination
+            {
+                LastId = state.Page < _lastPage ? _lastPageLastId : currentPageLastId,
+                PageSize = state.PageSize
+            };
 
-    //    if (!Context.AllColumnsChecked)
-    //    {
-    //        filter.AdvancedSearch = new()
-    //        {
-    //            Fields = Context.SearchFields,
-    //            Keyword = filter.Keyword
-    //        };
-    //        filter.Keyword = null;
-    //    }
+            _lastPage = state.Page;
+            _lastPageLastId = currentPageLastId;
+        }
+        else if (Context.ServerContext?.PaginationType == typeof(OffsetPagination))
+        {
+            pagination = new OffsetPagination
+            {
+                PageNum = state.Page + 1,
+                PageSize = state.PageSize
+            };
+        }
 
-    //    return filter;
-    //}
+        //if (!Context.AllColumnsChecked)
+        //{
+        //    filter.AdvancedSearch = new()
+        //    {
+        //        Fields = Context.SearchFields,
+        //        Keyword = filter.Keyword
+        //    };
+        //    filter.Keyword = null;
+        //}
+
+        return new GeneralFilter
+        {
+            Pagination = pagination,
+            Filter = new TextFilter { Text = SearchString },
+            Sort = _lastSort,
+        };
+    }
+    private GeneralFilter GetFilter()
+    {
+        //if (!Context.AllColumnsChecked)
+        //{
+        //    filter.AdvancedSearch = new()
+        //    {
+        //        Fields = Context.SearchFields,
+        //        Keyword = filter.Keyword
+        //    };
+        //    filter.Keyword = null;
+        //}
+
+        return new GeneralFilter
+        {
+            Filter = new TextFilter { Text = SearchString },
+            Sort = _lastSort,
+        };
+    }
 
     private async Task InvokeModal(TEntity? entity = default)
     {
@@ -251,13 +292,12 @@ public partial class EntityTable<TEntity, TId, TRequest>
 
             saveFunc = Context.CreateFunc;
 
-            //requestModel =
-            //    Context.GetDefaultsFunc is not null
-            //        && await ApiHelper.ExecuteCallGuardedAsync(
-            //                () => Context.GetDefaultsFunc(), Snackbar)
-            //            is { } defaultsResult
-            //    ? defaultsResult
-            //    : new TRequest();
+            requestModel =
+                Context.GetDefaultsFunc is not null
+                    && await ApiHelper.ExecuteClientCall(() => Context.GetDefaultsFunc(), Snackbar)
+                        is { } defaultsResult
+                ? defaultsResult
+                : new TRequest();
 
             title = $"{L["Create"]} {Context.EntityName}";
             successMessage = $"{Context.EntityName} {L["Created"]}";
@@ -271,21 +311,20 @@ public partial class EntityTable<TEntity, TId, TRequest>
 
             saveFunc = request => Context.UpdateFunc(id, request);
 
-            //requestModel =
-            //    Context.GetDetailsFunc is not null
-            //        && await ApiHelper.ExecuteCallGuardedAsync(
-            //                () => Context.GetDetailsFunc(id!),
-            //                Snackbar)
-            //            is { } detailsResult
-            //    ? detailsResult
-            //    : entity!.Adapt<TRequest>();
+            requestModel =
+                Context.GetDetailsFunc is not null
+                    && await ApiHelper.ExecuteClientCall(() => Context.GetDetailsFunc(id!), Snackbar)
+                        is { } detailsResult
+                ? detailsResult
+                : entity!.MapDynamically<TRequest, TEntity>();
+            // For adapt to work, must create mapping method from the entity to the request
 
             title = $"{L["Edit"]} {Context.EntityName}";
             successMessage = $"{Context.EntityName} {L["Updated"]}";
         }
 
         parameters.Add(nameof(AddEditModal<TRequest>.SaveFunc), saveFunc);
-        //parameters.Add(nameof(AddEditModal<TRequest>.RequestModel), requestModel);
+        parameters.Add(nameof(AddEditModal<TRequest>.RequestModel), requestModel);
         parameters.Add(nameof(AddEditModal<TRequest>.Title), title);
         parameters.Add(nameof(AddEditModal<TRequest>.SuccessMessage), successMessage);
 
@@ -318,9 +357,7 @@ public partial class EntityTable<TEntity, TId, TRequest>
         {
             _ = Context.DeleteFunc ?? throw new InvalidOperationException("DeleteFunc can't be null!");
 
-            //await ApiHelper.ExecuteClientCall(
-            //    () => Context.DeleteFunc(id),
-            //    Snackbar);
+            await ApiHelper.ExecuteClientCall(() => Context.DeleteFunc(id), Snackbar);
 
             await ReloadDataAsync();
         }

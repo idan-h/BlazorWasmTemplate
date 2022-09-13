@@ -84,12 +84,12 @@
                             }
                             else
                             {
-                                <MudTableSortLabel T="TEntity" SortLabel="@field.SortLabel">@field.DisplayName</MudTableSortLabel>
+                                <MudTableSortLabel Enabled="Context.ServerContext?.EnableSort ?? false" T="TEntity" SortLabel="@field.SortLabel">@field.DisplayName</MudTableSortLabel>
                             }
                         </MudTh>
                     }
                 }
-                <MudTh Style="text-align:right">@L["Actions"]</MudTh>
+                <MudTh>@L["Actions"]</MudTh>
             </HeaderContent>
 
             <RowTemplate>
@@ -110,29 +110,34 @@
                         }
                     </MudTd>
                 }
-                <MudTd DataLabel="Actions" Style="text-align: right">
+                <MudTd DataLabel="Actions">
                     @if (ActionsContent is not null)
                     {
                         @ActionsContent(context)
                     }
                     else if (HasActions)
                     {
-                        <MudMenu Label="@L["Actions"]" Variant="Variant.Filled" DisableElevation="true"
-                            EndIcon="@Icons.Filled.KeyboardArrowDown" IconColor="Color.Secondary" Direction="Direction.Left"
-                            OffsetX="true">
-                            @if (CanUpdateEntity(context))
-                            {
-                                <MudMenuItem @onclick="@(() => InvokeModal(context))">@L["Edit"]</MudMenuItem>
-                            }
-                            @if (CanDeleteEntity(context))
-                            {
-                                <MudMenuItem Style="color:red!important" @onclick="@(() => Delete(context))">@L["Delete"]</MudMenuItem>
-                            }
-                            @if (ExtraActions is not null)
-                            {
-                                @ExtraActions(context)
-                            }
-                        </MudMenu>
+                        @*<MudIconButton Icon="@Icons.Material.Outlined.RemoveRedEye" Color="Color.Inherit" Edge="Edge.Start" Link="/" />*@
+                        @if (CanUpdateEntity(context))
+                        {
+                            <MudIconButton Icon="@Icons.Material.Outlined.Edit" Class="me-1" OnClick="() => InvokeModal(context)" />
+                        }
+                        @if (CanDeleteEntity(context))
+                        {
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Class="me-1 red-on-hover" OnClick="() => Delete(context)" />
+                        }
+
+                        @if (ExtraActions is not null)
+                        {
+                            <MudMenu Label="@L["Actions"]" Variant="Variant.Filled" DisableElevation="true"
+                                EndIcon="@Icons.Filled.KeyboardArrowDown" IconColor="Color.Secondary" Direction="Direction.Left"
+                                OffsetX="true">
+                                @if (ExtraActions is not null)
+                                {
+                                    @ExtraActions(context)
+                                }
+                            </MudMenu>   
+                        }
                     }
                     else
                     {

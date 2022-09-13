@@ -7,9 +7,9 @@ using Microsoft.AspNetCore.Components.Authorization;
 using MudBlazor;
 using ShortRoute.Client.Infrastructure.Auth.Extensions;
 using ShortRoute.Contracts.Dtos.Authentication;
-using ShortRoute.Client.Models;
 using ShortRoute.Client.Infrastructure.ApiClient.v1;
 using ShortRoute.Contracts.Auth;
+using ShortRoute.Client.Models.Roles;
 
 namespace ShortRoute.Client.Pages.Identity.Roles;
 
@@ -39,8 +39,8 @@ public partial class RolePermissions
     protected override async Task OnInitializedAsync()
     {
         var state = await AuthState;
-        _canEditRoleClaims = await AuthService.HasPermissionAsync(state.User, Permissions.RoleChange);
-        _canSearchRoleClaims = await AuthService.HasPermissionAsync(state.User, Permissions.RoleRead);
+        _canEditRoleClaims = await AuthService.HasPermissionAsync(state.User, Permissions.UpdateRoles);
+        _canSearchRoleClaims = await AuthService.HasPermissionAsync(state.User, Permissions.ReadRoles);
 
         var role = await ApiHelper.ExecuteClientCall(() => RolesClient.RolesGetSingle(Id), Snackbar);
         var permissions = await ApiHelper.ExecuteClientCall(() => RolesClient.PermissionsGetList(), Snackbar);

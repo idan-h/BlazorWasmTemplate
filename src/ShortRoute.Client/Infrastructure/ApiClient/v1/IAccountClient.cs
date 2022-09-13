@@ -1,6 +1,6 @@
 ﻿using Refit;
 using ShortRoute.Client.Infrastructure.ApiClient.Base;
-using ShortRoute.Contracts.Commands.App.Account;
+using ShortRoute.Contracts.Commands.Authentication.Account;
 
 namespace ShortRoute.Client.Infrastructure.ApiClient.v1;
 

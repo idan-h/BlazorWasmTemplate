@@ -1,5 +1,6 @@
 ﻿using Refit;
 using ShortRoute.Client.Models;
+using ShortRoute.Client.Models.Generic;
 
 namespace ShortRoute.Client.Components.EntityTable;
 
@@ -8,7 +9,7 @@ namespace ShortRoute.Client.Components.EntityTable;
 /// Use this one if you want to use Client Paging, Sorting and Filtering.
 /// </summary>
 public class EntityClientTableContext<TEntity, TId, TRequest>
-    : EntityTableContext<TEntity, TId, TRequest, NullType>
+    : EntityTableContext<TEntity, TId, TRequest>
 {
     /// <summary>
     /// A function that loads all the data for the table from the api and returns a ListResult of TEntity.

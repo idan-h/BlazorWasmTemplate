@@ -7,7 +7,8 @@ using ShortRoute.Client.Infrastructure.Auth.Extensions;
 using ShortRoute.Client.Infrastructure.ApiClient.v1;
 using ShortRoute.Contracts.Dtos.Authentication;
 using ShortRoute.Contracts.Auth;
-using ShortRoute.Client.Models;
+using ShortRoute.Contracts.Commands.Authentication.Users;
+using ShortRoute.Client.Models.Roles;
 
 namespace ShortRoute.Client.Pages.Identity.Users;
 
@@ -24,7 +25,7 @@ public partial class UserRoles
     [Inject]
     protected IRolesClient RolesClient { get; set; } = default!;
 
-    private UserDto _user = default!;
+    private UpdateUserCommand _user = default!;
     private List<RoleModel> _userRolesList = default!;
 
     private string _title = string.Empty;
@@ -39,16 +40,22 @@ public partial class UserRoles
     protected override async Task OnInitializedAsync()
     {
         var state = await AuthState;
-        _canEditUsers = await AuthService.HasPermissionAsync(state.User, Permissions.UserChange);
-        _canSearchRoles = await AuthService.HasPermissionAsync(state.User, Permissions.UserRolesChange);
+        _canEditUsers = await AuthService.HasPermissionAsync(state.User, Permissions.UpdateUsers);
+        _canSearchRoles = await AuthService.HasPermissionAsync(state.User, Permissions.UpdateUsers);
 
         if (await ApiHelper.ExecuteClientCall(
                 () => UsersClient.UsersGetSingle(Id!), Snackbar)
             is UserDto user)
         {
-            _user = user;
-            _title = user.UserName!;
-            _description = string.Format(L["Manage {0}'s Roles"], user.UserName);
+            _user = new()
+            {
+                Id = user.Id!,
+                FirstName = user.FirstName!,
+                LastName = user.LastName!,
+                RoleNames = user.RoleNames,
+            };
+            _title = user.FullName;
+            _description = string.Format(L["Manage {0}'s Roles"], user.FullName);
 
             if (await ApiHelper.ExecuteClientCall(() => RolesClient.RolesGetList(), Snackbar)
                 is ICollection<RoleDto> response)

@@ -15,7 +15,6 @@
 <EditForm Model="@_tokenRequest" OnValidSubmit="SubmitAsync">
     <MudGrid>
         <DataAnnotationsValidator />
-        <CustomValidation @ref="_customValidation" />
         <MudItem xs="12">
             <MudTextField T="string" Label="@L["E-mail"]" Variant="Variant.Outlined" @bind-Value="_tokenRequest.User"
                 For="@(() => _tokenRequest.User)" />
