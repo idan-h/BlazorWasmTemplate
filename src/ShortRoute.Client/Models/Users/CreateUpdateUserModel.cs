@@ -1,4 +1,7 @@
-﻿using ShortRoute.Client.Models.Generic;
+﻿using FluentValidation;
+using Microsoft.Extensions.Localization;
+using ShortRoute.Client.Models.Generic;
+using ShortRoute.Client.Shared;
 
 namespace ShortRoute.Client.Models.Users;
 
@@ -25,7 +28,19 @@ public class CreateUpdateUserModel : BaseCreateUpdateModel<string>
 
     public string? TenantName { get; set; }
 
+    public bool IsActive { get; set; }
+
     // Id in base class
 
     #endregion
+}
+
+public class CreateUpdateUserModelValidator : AbstractValidator<CreateUpdateUserModel>
+{
+    public CreateUpdateUserModelValidator(IStringLocalizer<SharedResource> L)
+    {
+        RuleFor(r => r.ConfirmPassword)
+            .Equal(r => r.Password)
+            .WithMessage(L["Passwords aren't equal"]);
+    }
 }

@@ -1,0 +1,41 @@
+﻿
+@inherits MudButton
+
+@{
+    base.OnClick = new EventCallback<MouseEventArgs>(this, OnClickAction);
+    base.ButtonType = ButtonType.Button;
+    base.BuildRenderTree(__builder);
+}
+
+@code {
+
+    [Parameter]
+    public Func<Task>? OnValidSubmitAsync { get; set; }
+
+    [Parameter]
+    public Action? OnValidSubmit { get; set; }
+
+    [CascadingParameter]
+    public EditContext? EditContext { get; set; }
+
+    private async Task OnClickAction()
+    {
+        if (EditContext is null)
+        {
+            return;
+        }
+
+        if (!EditContext.Validate())
+        {
+            return;
+        }
+
+        OnValidSubmit?.Invoke();
+
+        if (OnValidSubmitAsync is not null)
+        {
+            await OnValidSubmitAsync();
+        }
+    }
+
+}

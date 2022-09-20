@@ -1,8 +1,12 @@
-﻿@typeparam TRequest
+﻿@using Blazored.FluentValidation
+@using ShortRoute.Client.Components.EditForm
+@typeparam TRequest
+@typeparam TCreate
+@typeparam TUpdate
 
 @inject IStringLocalizer<SharedResource> L
 
-<EditForm Model="@RequestModel" OnValidSubmit="SaveAsync">
+<EditForm EditContext="@EditContext">
     <MudDialog>
 
         <TitleContent>
@@ -15,7 +19,10 @@
                 {
                     <MudIcon Icon="@Icons.Material.Filled.Update" Class="me-3 mb-n1" />
                 }
+
                 @Title
+
+                @TitleExtraContent?.Invoke(RequestModel)
             </MudText>
         </TitleContent>
 
@@ -32,17 +39,20 @@
             <MudButton DisableElevation Variant="Variant.Filled" StartIcon="@Icons.Filled.Cancel" OnClick="MudDialog.Cancel">
                 @L["Cancel"]
             </MudButton>
+
+            @ExtraButtons?.Invoke(RequestModel)
+
             @if (IsCreate)
             {
-                <MudButton DisableElevation Variant="Variant.Filled" StartIcon="@Icons.Filled.Save" ButtonType="ButtonType.Submit" Color="Color.Success">
+                <SubmitButton DisableElevation OnValidSubmitAsync="SaveAsync" Variant="Variant.Filled" StartIcon="@Icons.Filled.Save" Color="Color.Success">
                     @L["Save"]
-                </MudButton>
+                </SubmitButton>
             }
             else
             {
-                <MudButton DisableElevation Variant="Variant.Filled" StartIcon="@Icons.Filled.Update" ButtonType="ButtonType.Submit" Color="Color.Secondary">
+                <SubmitButton DisableElevation OnValidSubmitAsync="SaveAsync" Variant="Variant.Filled" StartIcon="@Icons.Filled.Update" Color="Color.Secondary">
                     @L["Update"]
-                </MudButton>
+                </SubmitButton>
             }
         </DialogActions>
 

@@ -13,6 +13,7 @@ using ShortRoute.Contracts.Queries.Authentication.Users;
 using ShortRoute.Contracts.Commands.Authentication.Users;
 using ShortRoute.Client.Models.Users;
 using ShortRoute.Client.Mappings.Users;
+using ShortRoute.Client.Shared;
 
 namespace ShortRoute.Client.Pages.Identity.Users;
 
@@ -26,7 +27,7 @@ public partial class Users
     [Inject]
     protected IUsersClient UsersClient { get; set; } = default!;
 
-    protected EntityServerTableContext<UserDto, string, CreateUpdateUserModel> Context { get; set; } = default!;
+    protected EntityServerTableContext<UserDto, string, CreateUpdateUserModel, CreateUserCommand, UpdateUserCommand> Context { get; set; } = default!;
 
     private bool _canExportUsers;
     private bool _canViewRoles;
@@ -57,6 +58,7 @@ public partial class Users
                 new(user => user.FullName, L["FullName"]),
                 new(user => user.Email, L["Email"]),
                 new(user => user.TenantName, L["Tenant"]),
+                new(user => user.IsActive, L["Active"], Type: typeof(bool)),
             },
             idFunc: u => u.Id!,
             searchFunc: async filter =>
@@ -74,18 +76,8 @@ public partial class Users
             },
             getDefaultsFunc: null,
             //getDetailsFunc: async id => (await UsersClient.UsersGetSingle(id)).ToModel(),
-            createFunc: async user =>
-            {
-                if (user.Password != user.ConfirmPassword)
-                {
-                    Snackbar.Add(L["Passwords aren't identical"], Severity.Error);
-                    return;
-                }
-
-                var command = user.ToCreateCommand();
-                await UsersClient.UsersCreate(command);
-            },
-            updateFunc: async (id, user) => await UsersClient.UsersUpdate(new UpdateUserCommand { }), // TODO
+            createFunc: async command => await UsersClient.UsersCreate(command),
+            updateFunc: async (_, command) => await UsersClient.UsersUpdate(command),
             deleteFunc: async id => await UsersClient.UsersDelete(id),
 
             hasExtraActionsFunc: () => true,
@@ -114,5 +106,19 @@ public partial class Users
             _passwordInput = InputType.Text;
         }
         Context.AddEditModal.ForceRender();
+    }
+
+    private async Task DisableUser(CreateUpdateUserModel user)
+    {
+        if (await ApiHelper.ExecuteClientCall(() => UsersClient.UsersChangeActive(new ChangeUserActiveCommand
+        {
+            UserId = user.Id!,
+            IsActive = !user.IsActive
+        }), Snackbar))
+        {
+            user.IsActive = !user.IsActive;
+            // Context.AddEditModal.Close();
+            Context.AddEditModal.ForceRender();
+        }
     }
 }

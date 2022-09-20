@@ -19,9 +19,9 @@ public partial class Tenants
     [Inject]
     private ITenantClient TenantsClient { get; set; } = default!;
     private string? _searchString;
-    protected EntityClientTableContext<TenantModel, int, TenantDto> Context { get; set; } = default!;
+    protected EntityClientTableContext<TenantModel, int, TenantDto, TenantDto, TenantDto> Context { get; set; } = default!;
     private List<TenantModel> _tenants = new();
-    public EntityTable<TenantModel, int, TenantDto> EntityTable { get; set; } = default!;
+    public EntityTable<TenantModel, int, TenantDto, TenantDto, TenantDto> EntityTable { get; set; } = default!;
     [CascadingParameter]
     protected Task<AuthenticationState> AuthState { get; set; } = default!;
     [Inject]

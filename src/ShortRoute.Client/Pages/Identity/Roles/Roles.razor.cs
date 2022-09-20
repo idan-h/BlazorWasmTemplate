@@ -20,7 +20,7 @@ public partial class Roles
     [Inject]
     private IRolesClient RolesClient { get; set; } = default!;
 
-    protected EntityClientTableContext<RoleDto, string?, RoleDto> Context { get; set; } = default!;
+    protected EntityClientTableContext<RoleDto, string?, RoleDto, RoleDto, RoleDto> Context { get; set; } = default!;
 
     private bool _canViewRoleClaims;
 

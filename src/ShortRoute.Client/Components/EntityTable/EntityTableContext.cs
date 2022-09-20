@@ -8,7 +8,9 @@ namespace ShortRoute.Client.Components.EntityTable;
 /// <typeparam name="TEntity">The type of the entity.</typeparam>
 /// <typeparam name="TId">The type of the id of the entity.</typeparam>
 /// <typeparam name="TCreateUpdateRequest">The request which updates or creates.</typeparam>
-public abstract class EntityTableContext<TEntity, TId, TCreateUpdateRequest>
+/// <typeparam name="TCreateRequest">The request object which creates.</typeparam>
+/// <typeparam name="TUpdateRequest">The request object which updates.</typeparam>
+public abstract class EntityTableContext<TEntity, TId, TCreateUpdateRequest, TCreateRequest, TUpdateRequest>
 {
     /// <summary>
     /// The columns you want to display on the table.
@@ -31,7 +33,7 @@ public abstract class EntityTableContext<TEntity, TId, TCreateUpdateRequest>
     /// A function that executes the Create method on the api with the supplied entity and returns a Task of Result.
     /// No need to check for error messages or api exceptions. These are automatically handled by the component.
     /// </summary>
-    public Func<TCreateUpdateRequest, Task>? CreateFunc { get; }
+    public Func<TCreateRequest, Task>? CreateFunc { get; }
 
     /// <summary>
     /// A function that executes the GetDetails method on the api with the supplied Id and returns a Task of Result of the update request.
@@ -44,7 +46,7 @@ public abstract class EntityTableContext<TEntity, TId, TCreateUpdateRequest>
     /// When not supplied, the TEntity from the list is mapped to TCreateRequest using mapster.
     /// No need to check for error messages or api exceptions. These are automatically handled by the component.
     /// </summary>
-    public Func<TId, TCreateUpdateRequest, Task>? UpdateFunc { get; }
+    public Func<TId, TUpdateRequest, Task>? UpdateFunc { get; }
 
     /// <summary>
     /// A function that executes the Delete method on the api with the supplied entity id and returns a Task of Result.
@@ -124,9 +126,9 @@ public abstract class EntityTableContext<TEntity, TId, TCreateUpdateRequest>
         List<EntityField<TEntity>> fields,
         Func<TEntity, TId>? idFunc,
         Func<Task<TCreateUpdateRequest>>? getDefaultsFunc,
-        Func<TCreateUpdateRequest, Task>? createFunc,
+        Func<TCreateRequest, Task>? createFunc,
         Func<TId, Task<TCreateUpdateRequest>>? getDetailsFunc,
-        Func<TId, TCreateUpdateRequest, Task>? updateFunc,
+        Func<TId, TUpdateRequest, Task>? updateFunc,
         Func<TId, Task>? deleteFunc,
         string? entityName,
         string? entityNamePlural,
@@ -166,13 +168,15 @@ public abstract class EntityTableContext<TEntity, TId, TCreateUpdateRequest>
     internal void SetAddEditModalRef(IDialogReference dialog) =>
         _addEditModalRef = dialog;
 
-    public IAddEditModal<TCreateUpdateRequest> AddEditModal =>
-        _addEditModalRef?.Dialog as IAddEditModal<TCreateUpdateRequest>
+    public IAddEditModal<TCreateUpdateRequest, TCreateRequest, TUpdateRequest> AddEditModal =>
+        _addEditModalRef?.Dialog as IAddEditModal<TCreateUpdateRequest, TCreateRequest, TUpdateRequest>
         ?? throw new InvalidOperationException("AddEditModal is only available when the modal is shown.");
 
     // Shortcuts
-    public EntityClientTableContext<TEntity, TId, TCreateUpdateRequest>? ClientContext => this as EntityClientTableContext<TEntity, TId, TCreateUpdateRequest>;
-    public EntityServerTableContext<TEntity, TId, TCreateUpdateRequest>? ServerContext => this as EntityServerTableContext<TEntity, TId, TCreateUpdateRequest>;
+    public EntityClientTableContext<TEntity, TId, TCreateUpdateRequest, TCreateRequest, TUpdateRequest>? ClientContext =>
+        this as EntityClientTableContext<TEntity, TId, TCreateUpdateRequest, TCreateRequest, TUpdateRequest>;
+    public EntityServerTableContext<TEntity, TId, TCreateUpdateRequest, TCreateRequest, TUpdateRequest>? ServerContext =>
+        this as EntityServerTableContext<TEntity, TId, TCreateUpdateRequest, TCreateRequest, TUpdateRequest>;
     public bool IsClientContext => ClientContext is not null;
     public bool IsServerContext => ServerContext is not null;
 

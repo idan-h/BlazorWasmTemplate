@@ -13,12 +13,14 @@ using ShortRoute.Client.Mappings.Generic;
 
 namespace ShortRoute.Client.Components.EntityTable;
 
-public partial class EntityTable<TEntity, TId, TRequest>
+public partial class EntityTable<TEntity, TId, TRequest, TCreate, TUpdate>
     where TRequest : new()
+    where TCreate : new()
+    where TUpdate : new()
 {
     [Parameter]
     [EditorRequired]
-    public EntityTableContext<TEntity, TId, TRequest> Context { get; set; } = default!;
+    public EntityTableContext<TEntity, TId, TRequest, TCreate, TUpdate> Context { get; set; } = default!;
 
     [Parameter]
     public bool Loading { get; set; }
@@ -40,6 +42,13 @@ public partial class EntityTable<TEntity, TId, TRequest>
 
     [Parameter]
     public RenderFragment<TRequest>? EditFormContent { get; set; }
+
+    [Parameter]
+    public RenderFragment<TRequest>? FormExtraButtons { get; set; }
+
+    [Parameter]
+    public RenderFragment<TRequest>? FormTitleExtraContent { get; set; }
+
 
     [CascadingParameter]
     protected Task<AuthenticationState> AuthState { get; set; } = default!;
@@ -277,12 +286,15 @@ public partial class EntityTable<TEntity, TId, TRequest>
 
         var parameters = new DialogParameters()
         {
-            { nameof(AddEditModal<TRequest>.ChildContent), EditFormContent },
-            { nameof(AddEditModal<TRequest>.OnInitializedFunc), Context.EditFormInitializedFunc },
-            { nameof(AddEditModal<TRequest>.IsCreate), isCreate }
+            { nameof(AddEditModal<TRequest, TCreate, TUpdate>.ChildContent), EditFormContent },
+            { nameof(AddEditModal<TRequest, TCreate, TUpdate>.ExtraButtons), FormExtraButtons },
+            { nameof(AddEditModal<TRequest, TCreate, TUpdate>.TitleExtraContent), FormTitleExtraContent },
+            { nameof(AddEditModal<TRequest, TCreate, TUpdate>.OnInitializedFunc), Context.EditFormInitializedFunc },
+            { nameof(AddEditModal<TRequest, TCreate, TUpdate>.IsCreate), isCreate }
         };
 
-        Func<TRequest, Task> saveFunc;
+        Func<TCreate, Task>? createFunc = null;
+        Func<TUpdate, Task>? updateFunc = null;
         TRequest requestModel;
         string title, successMessage;
 
@@ -290,7 +302,7 @@ public partial class EntityTable<TEntity, TId, TRequest>
         {
             _ = Context.CreateFunc ?? throw new InvalidOperationException("CreateFunc can't be null!");
 
-            saveFunc = Context.CreateFunc;
+            createFunc = Context.CreateFunc;
 
             requestModel =
                 Context.GetDefaultsFunc is not null
@@ -309,7 +321,7 @@ public partial class EntityTable<TEntity, TId, TRequest>
 
             var id = Context.IdFunc(entity!);
 
-            saveFunc = request => Context.UpdateFunc(id, request);
+            updateFunc = update => Context.UpdateFunc(id, update);
 
             requestModel =
                 Context.GetDetailsFunc is not null
@@ -317,18 +329,19 @@ public partial class EntityTable<TEntity, TId, TRequest>
                         is { } detailsResult
                 ? detailsResult
                 : entity!.MapDynamically<TRequest, TEntity>();
-            // For adapt to work, must create mapping method from the entity to the request
+            // For MapDynamically to work, must create mapping method from the entity to the request
 
             title = $"{L["Edit"]} {Context.EntityName}";
             successMessage = $"{Context.EntityName} {L["Updated"]}";
         }
 
-        parameters.Add(nameof(AddEditModal<TRequest>.SaveFunc), saveFunc);
-        parameters.Add(nameof(AddEditModal<TRequest>.RequestModel), requestModel);
-        parameters.Add(nameof(AddEditModal<TRequest>.Title), title);
-        parameters.Add(nameof(AddEditModal<TRequest>.SuccessMessage), successMessage);
+        parameters.Add(nameof(AddEditModal<TRequest, TCreate, TUpdate>.CreateFunc), createFunc);
+        parameters.Add(nameof(AddEditModal<TRequest, TCreate, TUpdate>.UpdateFunc), updateFunc);
+        parameters.Add(nameof(AddEditModal<TRequest, TCreate, TUpdate>.RequestModel), requestModel);
+        parameters.Add(nameof(AddEditModal<TRequest, TCreate, TUpdate>.Title), title);
+        parameters.Add(nameof(AddEditModal<TRequest, TCreate, TUpdate>.SuccessMessage), successMessage);
 
-        var dialog = DialogService.ShowModal<AddEditModal<TRequest>>(parameters);
+        var dialog = DialogService.ShowModal<AddEditModal<TRequest, TCreate, TUpdate>>(parameters);
 
         Context.SetAddEditModalRef(dialog);
 

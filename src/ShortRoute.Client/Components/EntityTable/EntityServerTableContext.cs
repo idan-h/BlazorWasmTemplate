@@ -7,8 +7,8 @@ namespace ShortRoute.Client.Components.EntityTable;
 /// Initialization Context for the EntityTable Component.
 /// Use this one if you want to use Server Paging, Sorting and Filtering.
 /// </summary>
-public class EntityServerTableContext<TEntity, TId, TCreateUpdateRequest>
-    : EntityTableContext<TEntity, TId, TCreateUpdateRequest>
+public class EntityServerTableContext<TEntity, TId, TCreateUpdateRequest, TCreateRequest, TUpdateRequest>
+    : EntityTableContext<TEntity, TId, TCreateUpdateRequest, TCreateRequest, TUpdateRequest>
 {
     /// <summary>
     /// A function that loads the specified page from the api with the specified search criteria
@@ -37,9 +37,9 @@ public class EntityServerTableContext<TEntity, TId, TCreateUpdateRequest>
 
         Func<TEntity, TId>? idFunc = null,
         Func<Task<TCreateUpdateRequest>>? getDefaultsFunc = null,
-        Func<TCreateUpdateRequest, Task>? createFunc = null,
+        Func<TCreateRequest, Task>? createFunc = null,
         Func<TId, Task<TCreateUpdateRequest>>? getDetailsFunc = null,
-        Func<TId, TCreateUpdateRequest, Task>? updateFunc = null,
+        Func<TId, TUpdateRequest, Task>? updateFunc = null,
         Func<TId, Task>? deleteFunc = null,
 
         string? entityName = null,

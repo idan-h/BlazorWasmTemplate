@@ -5,6 +5,9 @@ using ShortRoute.Client.Infrastructure.Preferences;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using ShortRoute.Client.Infrastructure;
+using FluentValidation;
+using ShortRoute.Contracts.Extensions;
+using System.Reflection;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
@@ -12,6 +15,8 @@ builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddClientServices(builder.Configuration);
+builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+builder.Services.AddContractsValidators();
 
 var host = builder.Build();
 

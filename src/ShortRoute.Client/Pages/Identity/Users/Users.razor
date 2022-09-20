@@ -1,5 +1,6 @@
 ﻿@page "/users"
 @using ShortRoute.Client.Models.Users
+@using ShortRoute.Contracts.Commands.Authentication.Users
 @using ShortRoute.Contracts.Dtos.Authentication
 @using ShortRoute.Contracts.Queries.Authentication.Users
 @using ShortRoute.Contracts.Queries.Common
@@ -9,7 +10,7 @@
 
 <FshTitle Title="@L["Users"]" Description="@L["Manage Users"]" />
 
-<EntityTable TEntity="UserDto" TId="string" TRequest="CreateUpdateUserModel" Context="@Context">
+<EntityTable TEntity="UserDto" TId="string" TRequest="CreateUpdateUserModel" TCreate="CreateUserCommand" TUpdate="UpdateUserCommand" Context="@Context">
     <ExtraActions>
         @*<MudMenuItem OnClick="(() => ViewProfile(context.Id!))">@L["View Profile"]</MudMenuItem>*@
         @if (_canViewRoles)
@@ -17,6 +18,17 @@
             <MudMenuItem OnClick="(() => ManageRoles(context.Id!))">@L["Manage Roles"]</MudMenuItem>
         }
     </ExtraActions>
+
+    <FormTitleExtraContent>
+        @if (context.IsActive && context.IsUpdate)
+        {
+            <MudChip Color="Color.Primary">@L["Active"]</MudChip>
+        }
+        else if (context.IsUpdate)
+        {
+            <MudChip Color="Color.Error">@L["Disabled"]</MudChip>
+        }
+    </FormTitleExtraContent>
 
     <EditFormContent>
 
@@ -72,6 +84,22 @@
             </div>
         }
 
+        <div class="mt-5">
+            <UserRoles Id="@context.Id" />
+        </div>
+
     </EditFormContent>
+
+    <FormExtraButtons>
+        @if (context.IsUpdate)
+        {
+            <MudButton DisableElevation Variant="Variant.Filled"
+                       StartIcon="@(context.IsActive ? Icons.Filled.PersonOff : Icons.Filled.Person)"
+                       OnClick="() => DisableUser(context)"
+                       Color="@(context.IsActive ? Color.Error : Color.Primary)">
+                @(context.IsActive ? @L["Disable"] : @L["Activate"])
+            </MudButton>
+        }
+    </FormExtraButtons>
 
 </EntityTable>

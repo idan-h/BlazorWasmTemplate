@@ -5,7 +5,7 @@
 
 @inject IStringLocalizer<UserRoles> L
 
-<FshTitle Title="@_title" Description="@_description" />
+@*<FshTitle Title="@_title" Description="@_description" />*@
 
 @if (!_loaded)
 {
@@ -15,7 +15,7 @@ else
 {
     <MudTable Hover="true" Elevation="25" Items="_userRolesList" Filter="new Func<RoleModel, bool>(Search)">
         <ToolBarContent>
-            <div class="justify-center mud-text-align-center">
+            @*<div class="justify-center mud-text-align-center">
                 <MudButton Variant="Variant.Filled" Color="Color.Info" Class="ms-auto reverse-child-svg-when-rtl" StartIcon="@Icons.Material.Filled.ArrowBack" Link="/users">
                     @L["Back"]
                 </MudButton>
@@ -26,8 +26,7 @@ else
                         @L["Update"]
                     </MudButton>
                 }
-            </div>
-            <MudSpacer />
+            </div>*@
             @if (_canSearchRoles)
             {
                 <MudTextField @bind-Value="_searchString" Immediate="true" FullWidth=false

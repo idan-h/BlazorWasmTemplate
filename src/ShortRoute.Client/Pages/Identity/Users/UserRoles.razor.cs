@@ -37,6 +37,30 @@ public partial class UserRoles
     private bool _canSearchRoles;
     private bool _loaded;
 
+    [Parameter]
+    public EventCallback<string> ValueValueChanged { get; set; }
+
+    [Parameter]
+    public string Value
+    {
+        get => _value;
+        set
+        {
+            if (value == _value)
+            {
+                return;
+            }
+
+            _value = value;
+
+            if (ValueValueChanged.HasDelegate)
+            {
+                ValueValueChanged.InvokeAsync(_value);
+            }
+        }
+    }
+    private string _value = "";
+
     protected override async Task OnInitializedAsync()
     {
         var state = await AuthState;
