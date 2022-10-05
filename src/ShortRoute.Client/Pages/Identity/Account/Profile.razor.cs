@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Components.Forms;
 using MudBlazor;
 using ShortRoute.Client.Infrastructure.Auth;
 using ShortRoute.Client.Infrastructure.Auth.Extensions;
+using ShortRoute.Contracts.Extensions;
 
 namespace ShortRoute.Client.Pages.Identity.Account;
 

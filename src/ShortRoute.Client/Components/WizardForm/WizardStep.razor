@@ -1,0 +1,37 @@
+﻿@inherits MudComponentBase
+
+@if (Parent.CurrentStep == _stepNumber)
+{
+    <FshTitle Title="@Title" Description="@Description" />
+
+    <CascadingValue Value="_model" IsFixed="true">
+        @ChildContent
+    </CascadingValue>
+}
+
+@code {
+
+    private StepModel _model = new();
+    private int _stepNumber;
+
+    [CascadingParameter]
+    protected internal IWizardForm Parent { get; set; } = default!;
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; } = default!;
+
+    [Parameter]
+    public string Title { get; set; } = "";
+
+    [Parameter]
+    public string Description { get; set; } = "";
+
+    protected override void OnInitialized()
+    {
+        _model.Title = Title;
+        _model.Description = Description;
+
+        _stepNumber = Parent.AddStep(_model);
+        base.OnInitialized();
+    }
+}

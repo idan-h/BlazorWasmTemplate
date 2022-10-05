@@ -1,0 +1,130 @@
+﻿
+<ol class="FormStepList" style="max-width: @(Steps.Count * 180)px">
+    @for (var i = 1; i <= Steps.Count; i++)
+    {
+        var step = Steps[i - 1];
+        var stepNum = i;
+        var isLast = stepNum == Steps.Count;
+
+        <li class="FormStepList-item">
+            <MudTooltip Text="@step.Description">
+                <span class="FormStepIcon @(stepNum < CurrentStep ? "is-passed" : "")
+                                            @(stepNum == CurrentStep ? "is-active" : "")
+                                            @(isLast ? "FormStepIcon--last" : "")">
+                    <span class="FormStepIcon-circle" onclick="@(() => SelectIfPassed(stepNum))">@stepNum</span>
+                    <span class="FormStepIcon-title">@step.Title</span>
+                </span>
+            </MudTooltip>
+        </li>
+    }
+</ol>
+
+
+<style>
+    .FormStepList {
+	    display: flex;
+	    overflow: hidden;
+        width: 100%;
+    }
+    .FormStepList-item {
+	    flex: 1 1 50px;
+	    text-align: center;
+	    list-style: none;
+    }
+    .FormStepList-item:before {
+	    content: none !important;
+	    display: none !important;
+    }
+    .FormStepIcon {
+	    display: inline-block;
+	    width: 50px;
+	    text-align: center;
+	    position: relative;
+    }
+    .FormStepIcon.is-active .FormStepIcon-circle {
+	    background: #43b69a;
+	    border: 4px solid #8ed3c2;
+	    color: #fff;
+    }
+    .FormStepIcon.is-passed:after {
+        background-position:left bottom;
+    }
+    [dir="rtl"] .FormStepIcon.is-passed:after {
+        background-position:right bottom;
+    }
+    .FormStepIcon.is-passed .FormStepIcon-circle {
+	    background: #43b69a;
+	    color: #fff;
+    }
+    .FormStepIcon:after {
+	    content: '';
+	    position: absolute;
+	    right: -1000%;
+	    top: 20px;
+	    left: 10px;
+	    height: 4px;
+	    z-index: 1;
+
+        background: linear-gradient(to right, #43b69a 50%, #d4d4d4 50%);
+        background-size: 200% 100%;
+        background-position:right bottom;
+        transition:all 0.7s ease;
+    }
+    [dir="rtl"] .FormStepIcon:after {
+	    left: -1000%;
+	    right: 10px;
+        background: linear-gradient(to right, #d4d4d4 50%, #43b69a 50%);
+        background-size: 200% 100%;
+        background-position:left bottom;
+    }
+    .FormStepIcon.FormStepIcon--last:after {
+	    background: #fff;
+    }
+    .FormStepIcon-circle {
+	    background: #d4d4d4;
+	    color: #a9a9a9;
+	    font-size: 16px;
+	    font-weight: bold;
+	    width: 40px;
+	    height: 40px;
+	    border-radius: 50%;
+	    display: inline-flex;
+	    justify-content: center;
+	    align-items: center;
+	    position: relative;
+	    z-index: 2;
+        transition: all 0.7s ease;
+    }
+    .FormStepIcon-title {
+	    display: block;
+	    font-size: 1em;
+	    margin-top: 0.5em;
+    }
+</style>
+
+@code {
+
+    private const string backgroundColor = "";
+
+    [CascadingParameter]
+    protected internal IWizardForm Parent { get; set; } = default!;
+
+    [Parameter]
+    public List<StepModel> Steps { get; set; } = default!;
+
+    [Parameter]
+    public int CurrentStep { get; set; }
+
+    [Parameter]
+    public bool BackToStepOnClickDisabled { get; set; }
+
+    private void SelectIfPassed(int step)
+    {
+        if (BackToStepOnClickDisabled || step >= Parent.CurrentStep)
+        {
+            return;
+        }
+
+        Parent.Select(step);
+    }
+}

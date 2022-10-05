@@ -8,6 +8,7 @@ using ShortRoute.Client.Infrastructure;
 using FluentValidation;
 using ShortRoute.Contracts.Extensions;
 using System.Reflection;
+using ShortRoute.Client.Helpers;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
@@ -31,5 +32,7 @@ if (storageService != null)
     CultureInfo.DefaultThreadCurrentCulture = culture;
     CultureInfo.DefaultThreadCurrentUICulture = culture;
 }
+
+ServiceHelper.Provider = host.Services;
 
 await host.RunAsync();

@@ -1,0 +1,112 @@
+﻿@using FluentValidation
+
+@typeparam T
+
+<EditForm EditContext="@EditContext" ChildContent="ChildContent" />
+
+@code {
+
+    private bool _alreadyValidated;
+
+    [Parameter]
+    public T Model { get; set; } = default!;
+
+    [Parameter]
+    public EditContext EditContext { get; set; } = default!;
+
+    [Parameter]
+    public ValidationMessageStore MessageStore { get; set; } = default!;
+
+    [Parameter]
+    public Action? ValidateAction { get; set; }
+
+    [Parameter]
+    public bool ClearValidationOnValidate { get; set; } = true;
+
+    [Parameter]
+    public RenderFragment<EditContext> ChildContent { get; set; } = default!;
+
+    [Inject]
+    private IEnumerable<IValidator<T>> Validators { get; set; } = default!;
+
+    protected override Task OnInitializedAsync()
+    {
+        if (EditContext is null)
+        {
+            EditContext = new EditContext(Model);
+
+            EditContext.OnFieldChanged += (sender, eventArgs) =>
+            {
+                if (!_alreadyValidated)
+                {
+                    return;
+                }
+
+                EditContext.Validate();
+            };
+
+            EditContext.OnValidationRequested += (sender, eventArgs) =>
+            {
+                if (ValidateAction is null)
+                {
+                    Validate();
+                }
+                else
+                {
+                    ValidateAction();
+                }
+            };
+        }
+
+        if (MessageStore is null)
+        {
+            MessageStore = new(EditContext);   
+        }
+
+        return base.OnInitializedAsync();
+    }
+
+    private bool Validate<TModel>(TModel model, IEnumerable<IValidator<TModel>> validators, IEnumerable<string>? properties)
+    {
+        _alreadyValidated = true;
+
+        if (ClearValidationOnValidate)
+        {
+            MessageStore.Clear();
+        }
+
+        if (validators?.Any() == true)
+        {
+            var context = new ValidationContext<TModel>(model);
+            foreach (var property in properties ?? Enumerable.Empty<string>())
+            {
+                context.PropertyChain.Add(property);
+            }
+
+            var validationResults = validators.Select(v => v.Validate(model, opt =>
+                {
+                    if (properties?.Any() == true)
+                    {
+                        opt.IncludeProperties(properties?.ToArray());
+                    }
+                }));
+            var failures = validationResults.SelectMany(r => r.Errors).Where(f => f != null).ToList();
+
+            foreach (var failure in failures)
+            {
+                MessageStore.Add(EditContext.Field(failure.PropertyName), failure.ErrorMessage);
+            }
+
+            EditContext.NotifyValidationStateChanged();
+
+            return !failures.Any();
+        }
+
+        return true;
+    }
+
+    public bool Validate(IEnumerable<string>? properties = null)
+    {
+        return Validate(Model, Validators, properties);
+    }
+}

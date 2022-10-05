@@ -1,7 +1,10 @@
 ﻿@page "/tenants"
 @using ShortRoute.Client.Models.Generic
 @using ShortRoute.Client.Models.Tenants
+@using ShortRoute.Client.Models.Users
+@using ShortRoute.Contracts.Commands.Authentication.Tenants
 @using ShortRoute.Contracts.Dtos.Authentication
+@using ShortRoute.Client.Pages.Identity.Roles
 @attribute [Authorize(Permissions.ReadTenants)]
 
 @inject IStringLocalizer<Tenants> L
@@ -9,58 +12,64 @@
 
 <FshTitle Title="@L["Tenants"]" Description="@L["Manage Tenants."]" />
 
-<EntityTable @ref="EntityTable" TEntity="TenantModel" TId="int" TRequest="TenantDto" TCreate="TenantDto" TUpdate="TenantDto" Context="@Context"
-    @bind-SearchString="_searchString">
-    <EditFormContent>
-        <MudItem xs="12" md="6">
-            <MudTextField T="int" @bind-Value="context.TenantId" Label="@L["Key"]" />
-        </MudItem>
-        <MudItem xs="12" md="6">
-            <MudTextField T="string" @bind-Value="context.TenantFullName" Label="@L["Name"]" />
-        </MudItem>
-    </EditFormContent>
+<EntityTable TEntity="TenantModel" TId="string" TRequest="CreateUpdateTenantModel" TCreate="CreateTenantCommand" TUpdate="UpdateTenantCommand" Context="@Context">
+
     <ExtraActions>
-        @if(_canUpgrade)
+        @if (_hasReadUsersPermission)
         {
-            <MudMenuItem OnClick="@(() => ViewUpgradeSubscriptionModalAsync(context.Dto.TenantId))">@L["Upgrade Subscription"]</MudMenuItem>
+            <MudMenuItem OnClick="(() => NavigateToUsers(context.Dto.Id))">
+                @L["Show Users"]
+            </MudMenuItem>
         }
-        @if (_canModify)
-        {
-@*            @if (!context.IsActive)
-            {
-                <MudMenuItem Style="color:limegreen!important" OnClick="@(() => ActivateTenantAsync(context.TenantId))">@L["Activate Tenant"]</MudMenuItem>
-            }
-            else
-            {
-                <MudMenuItem Style="color:red!important" OnClick="@(() => DeactivateTenantAsync(context.TenantId))">@L["Deactivate Tenant"]</MudMenuItem>
-            }
-*@        }
     </ExtraActions>
 
-    <ChildRowContent>
-@*        @if (context.ShowDetails)
+    <FormTitleExtraContent>
+        @if (context.IsActive && context.IsUpdate)
         {
-            <MudTr>
-                <td colspan="6">
-                    <MudCard Elevation="25" style="margin: 10px !important;">
-                        <MudCardHeader>
-                            <CardHeaderContent>
-                                <MudAlert Severity="Severity.Info" Typo="Typo.body1">@L["Details for Tenant"] :
-                                    <strong>@context.TenantId</strong>
-                                </MudAlert>
-                            </CardHeaderContent>
-                        </MudCardHeader>
-                        <MudCardContent>
-                            <table class="mud-table-root">
-                                <tbody class="mud-table-body">
-                                    dits
-                                </tbody>
-                            </table>
-                        </MudCardContent>
-                    </MudCard>
-                </td>
-            </MudTr>
+            <MudChip Color="Color.Primary">@L["Active"]</MudChip>
         }
-*@    </ChildRowContent>
+        else if (context.IsUpdate)
+        {
+            <MudChip Color="Color.Error">@L["Disabled"]</MudChip>
+        }
+    </FormTitleExtraContent>
+
+    <EditFormContent>
+
+        <div class="row">
+            @if (context.IsUpdate)
+            {
+                <div class="col-md-6">
+                    <MudTextField For="@(() => context.Id)" ReadOnly="true" Value="context.Id" Label="@L["Id"]" />
+                </div>
+            }
+            <div class="col-md-@(context.IsUpdate ? 6 : 12)">
+                <MudTextField For="@(() => context.TenantFullName)" @bind-Value="context.TenantFullName" Label="@L["Name"]" />
+            </div>
+        </div>
+
+        <div class="mt-5">
+            <RoleChooser @bind-Value="@context.TenantRolesName" GetRoleListFunc="GetTenantRoles" />
+        </div>
+
+    </EditFormContent>
+
+    <FormExtraButtons>
+        @if (context.IsUpdate)
+        {
+            <MudButton DisableElevation Variant="Variant.Filled"
+                       StartIcon="@(context.IsActive ? Icons.Filled.Block : Icons.Filled.Check)"
+                       OnClick="() => ChangeTenantActivation(context.Id!,
+                                                           context.IsActive,
+                                                           () =>
+                                                           {
+                                                               context.IsActive = !context.IsActive;
+                                                               Context.AddEditModal.ForceRender();
+                                                           })"
+                       Color="@(context.IsActive ? Color.Error : Color.Primary)">
+                @(context.IsActive ? @L["Disable"] : @L["Activate"])
+            </MudButton>
+        }
+    </FormExtraButtons>
 
 </EntityTable>

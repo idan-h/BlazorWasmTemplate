@@ -1,33 +1,37 @@
 ﻿@page "/roles"
+@using ShortRoute.Client.Models.Users
+@using ShortRoute.Contracts.Commands.Authentication.Roles
+@using ShortRoute.Contracts.Dtos.Authentication
 @attribute [Authorize(Permissions.ReadRoles)]
 
 @inject IStringLocalizer<Roles> L
 
 <FshTitle Title="@L["Roles"]" Description="@L["Manage Roles."]" />
 
-@*<EntityTable TEntity="RoleDto" TId="string" TRequest="RoleDto" Context="@Context">
-
-    <ExtraActions>
-        @if (_canViewRoleClaims)
-        {
-            <MudMenuItem @onclick="@(() => ManagePermissions(context.Id))">@L["Manage Permission"]</MudMenuItem>
-        }
-    </ExtraActions>
+<EntityTable TEntity="RoleDto" TId="string" TRequest="CreateUpdateRoleModel" TCreate="CreateRoleCommand" TUpdate="UpdateRoleCommand" Context="@Context">
 
     <EditFormContent>
-        @if (!Context.AddEditModal.IsCreate)
-        {
-            <MudItem xs="12" md="6">
-                <MudTextField Value="context.Id" ReadOnly DisableUnderLine Label="@L[$"Role Id"]" />
-            </MudItem>
-        }
-        <MudItem xs="12" md="6">
-            <MudTextField For="@(() => context.Name)" @bind-Value="context.Name" Label="@L["Role Name"]" />
-        </MudItem>
-        <MudItem xs="12" md="6">
-            <MudTextField For="@(() => context.Description)" @bind-Value="context.Description"
-                Label="@L["Description"]" />
-        </MudItem>
+        <div class="row">
+            <div class="col-md-3">
+                <MudTextField For="@(() => context.RoleName)" ReadOnly="!Context.AddEditModal.IsCreate" @bind-Value="context.RoleName" Label="@L["Role Name"]" />
+            </div>
+            <div class="col-md-6">
+                <MudTextField For="@(() => context.Description)" @bind-Value="context.Description" Label="@L["Description"]" />
+            </div>
+            <div class="col-md-3">
+                <MudSelect @bind-Value="context.RoleType" Label="@L["Type"]">
+                    @foreach (RoleType type in Enum.GetValues(typeof(RoleType)))
+                    {
+                        <MudSelectItem Value="@((int)type)">@L[type.ToString()]</MudSelectItem>
+                    }
+                </MudSelect>
+            </div>
+        </div>
+
+        <div class="mt-5">
+            <RolePermissions @bind-Value="@context.PermissionNames" />
+        </div>
+
     </EditFormContent>
 
-</EntityTable>*@
+</EntityTable>

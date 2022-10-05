@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Linq.Expressions;
+using System.Reflection;
 
 namespace ShortRoute.Client.Helpers;
 
@@ -71,5 +72,15 @@ public static class ReflectionHelper
         if (baseType is null) return false;
 
         return IsAssignableToGenericType(baseType, genericType);
+    }
+
+    public static string GetPropertyName<TProperty>(
+        Expression<Func<TProperty>> propertyLambda
+        )
+    {
+        var expression = (MemberExpression)propertyLambda.Body;
+        string name = expression.Member.Name;
+
+        return name;
     }
 }

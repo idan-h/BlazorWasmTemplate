@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using ShortRoute.Client.Infrastructure.Auth.Extensions;
-using ShortRoute.Contracts.Auth;
+using ShortRoute.Contracts.Enums;
 
 namespace ShortRoute.Client.Shared;
 

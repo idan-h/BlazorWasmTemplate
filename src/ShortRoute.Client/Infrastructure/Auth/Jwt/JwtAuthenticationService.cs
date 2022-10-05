@@ -6,11 +6,13 @@ using ShortRoute.Contracts.Commands.Authentication;
 using ShortRoute.Contracts.Responses.Authentication;
 using ShortRoute.Client.Infrastructure.Auth.Extensions;
 using ShortRoute.Client.Infrastructure.Auth.Enums;
-using ShortRoute.Contracts.Auth;
+using ShortRoute.Contracts.Enums;
 using Newtonsoft.Json;
 using System.Text;
 using ShortRoute.Contracts.Commands.Authentication.Login;
 using ShortRoute.Contracts.Responses.Authentication.Login;
+using ShortRoute.Contracts.Extensions;
+using ShortRoute.Client.Infrastructure.Auth.Exceptions;
 
 namespace ShortRoute.Client.Infrastructure.Auth.Jwt;
 
@@ -40,7 +42,7 @@ public class JwtAuthenticationService : AuthenticationStateProvider, IAuthentica
         }
 
         // Generate claimsIdentity from cached token
-        var claimsIdentity = new ClaimsIdentity(GetClaimsFromJwt(cachedToken), "jwt");
+        var claimsIdentity = GetClaimsIdentity(cachedToken);
 
         // Add cached permissions as claims
         if (await GetCachedPermissionsAsync() is List<string> cachedPermissions)
@@ -61,6 +63,12 @@ public class JwtAuthenticationService : AuthenticationStateProvider, IAuthentica
         if (string.IsNullOrWhiteSpace(authResponse.Token))
         {
             return false;
+        }
+
+        var claimsIdentity = GetClaimsIdentity(authResponse.Token);
+        if (new ClaimsPrincipal(claimsIdentity).TenantDisabled())
+        {
+            throw new TenantExpiredException();
         }
 
         await CacheAuthTokens(authResponse);
@@ -214,7 +222,12 @@ public class JwtAuthenticationService : AuthenticationStateProvider, IAuthentica
     private ValueTask<ICollection<string>> GetCachedPermissionsAsync() =>
         _localStorage.GetItemAsync<ICollection<string>>(StorageConstants.Local.Permissions);
 
-    private IEnumerable<Claim> GetClaimsFromJwt(string jwt)
+    private static ClaimsIdentity GetClaimsIdentity(string token)
+    {
+        return new ClaimsIdentity(GetClaimsFromJwt(token), "jwt");
+    }
+
+    private static IEnumerable<Claim> GetClaimsFromJwt(string jwt)
     {
         var claims = new List<Claim>();
         string payload = jwt.Split('.')[1];
@@ -254,7 +267,7 @@ public class JwtAuthenticationService : AuthenticationStateProvider, IAuthentica
         return claims;
     }
 
-    private byte[] ParseBase64WithoutPadding(string payload)
+    private static byte[] ParseBase64WithoutPadding(string payload)
     {
         payload = payload.Trim().Replace('-', '+').Replace('_', '/');
         string base64 = payload.PadRight(payload.Length + (4 - payload.Length % 4) % 4, '=');

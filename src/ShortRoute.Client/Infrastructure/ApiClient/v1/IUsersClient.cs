@@ -12,7 +12,11 @@ public interface IUsersClient : IApiClient
     /// Gets a list of all the users availbale filtered by current user's tenant
     /// </summary>
     [Get("/api/v1/users")]
-    public Task<GetUsersResponse> UsersGetList(string? pagination = null, string? filter = null, string? sort = null);
+    public Task<GetUsersResponse> UsersGetList(
+        string? pagination = null,
+        string? filter = null,
+        string? sort = null,
+        string? tenantId = null);
 
     /// <summary>
     /// Creates a user
@@ -42,7 +46,7 @@ public interface IUsersClient : IApiClient
     /// List of all the available roles for updating the user
     /// </summary>
     [Get("/api/v1/users/roles/{tenantId}")]
-    public Task<string[]> UsersRolesGet(int? tenantId);
+    public Task<GetUsersRolesResponse> UsersRolesGet(string? tenantId);
 
     /// <summary>
     /// Changes the user to disabled or active

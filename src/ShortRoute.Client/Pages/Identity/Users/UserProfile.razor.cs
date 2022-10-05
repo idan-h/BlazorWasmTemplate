@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Components.Authorization;
 using ShortRoute.Client.Infrastructure.Auth.Extensions;
 using ShortRoute.Client.Infrastructure.ApiClient.v1;
 using ShortRoute.Contracts.Dtos.Authentication;
-using ShortRoute.Contracts.Auth;
+using ShortRoute.Contracts.Enums;
 
 namespace ShortRoute.Client.Pages.Identity.Users;
 

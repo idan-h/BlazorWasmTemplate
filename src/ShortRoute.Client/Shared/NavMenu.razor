@@ -51,4 +51,10 @@
             <MudNavLink Href="/tenants" Icon="@Icons.Filled.GroupWork" Disabled="!_canViewTenants">@L["Tenants"]</MudNavLink>
         }
     }
+    @if (true)
+    {
+        <MudText Typo="Typo.subtitle2" Color="Color.Primary" Class="ms-4 my-3">Example</MudText>
+        <MudNavLink Match="NavLinkMatch.All" Href="/" Icon="@Icons.Material.Filled.AutoFixNormal">Example</MudNavLink>
+        <MudNavLink Match="NavLinkMatch.Prefix" Href="/wizard" Icon="@Icons.Material.Filled.AutoAwesome">Wizard</MudNavLink>
+    }
 </MudNavMenu>

@@ -5,11 +5,9 @@ namespace ShortRoute.Client.Models.Tenants;
 public class TenantModel
 {
     public TenantDto Dto { get; }
-    public bool ShowDetails { get; set; }
 
-    public TenantModel(TenantDto dto, bool showDetails)
+    public TenantModel(TenantDto dto)
     {
         Dto = dto;
-        ShowDetails = showDetails;
     }
 }

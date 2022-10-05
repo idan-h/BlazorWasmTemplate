@@ -1,0 +1,244 @@
+﻿@using System.Runtime.CompilerServices
+@using MudBlazor
+@using MudBlazor.Utilities
+@using ShortRoute.Client.Components.EditForm
+
+@typeparam T
+
+@inherits MudComponentBase
+@implements IWizardForm
+
+@inject IStringLocalizer<SharedResource> L
+
+<CascadingValue Value="this" IsFixed="true">
+    <FluentEditForm @ref="_editForm" Model="Model">
+        <MudCard @attributes="UserAttributes" 
+                 Class="@Classname" 
+                 Style="@Style" 
+                 Elevation="@Elevation">
+            @if (CurrentStep > 0)
+            {
+                <MudCardHeader Style="justify-content: center;">
+                    <WizardStepsViewer Steps="_steps" CurrentStep="CurrentStep" BackToStepOnClickDisabled="false" />
+                </MudCardHeader>
+            }
+
+            <MudCardContent Style="overflow: hidden" Class="container">
+                <div class="@animationClass">
+                    @ChildContent
+                </div>
+            </MudCardContent>
+
+            <MudCardActions>
+
+                @if (CurrentStep > 1)
+                {
+                    <MudTooltip Text="@L["Move to the previous step."]">
+                        <MudButton DisableElevation OnClick="_onPrevious" Disabled="_isPreviousDisabled" Variant="ButtonVariant" Color="Color.Secondary">
+                            @L["Previous"]
+                        </MudButton>
+	                </MudTooltip>   
+                }
+
+                <MudSpacer />
+
+                <span style="display: flex; margin-left: auto">
+                    @if (_isFinishVisible)
+                    {
+                        <MudTooltip Text="@L["Finish the wizard."]">
+                            <SubmitButton DisableElevation OnValidSubmitAsync="_onFinish" Variant="ButtonVariant" Color="Color.Success">
+                                @L["Finish"]
+                            </SubmitButton>
+			            </MudTooltip>
+                    }
+                    else
+                    {
+                        <MudTooltip Text="@L["Move to the next step."]">
+                            <MudButton DisableElevation OnClick="_onNext" Disabled="_isNextDisabled" Variant="ButtonVariant" Color="Color.Primary">
+                                @L["Next"]
+                            </MudButton> 
+			            </MudTooltip>
+                    }
+                </span>
+            </MudCardActions>
+        </MudCard>
+    </FluentEditForm>
+</CascadingValue> 
+
+@code {
+
+    private List<StepModel> _steps = new();
+    private FluentEditForm<T> _editForm;
+    private string animationClass;
+
+    private bool _isLastStep => CurrentStep > _steps.Count - 1;
+    private bool _isPreviousDisabled => DisablePreviousButton || CurrentStep <= 1;
+    private bool _isNextDisabled => DisableNextButton || _isLastStep;
+    private bool _isFinishVisible => ShowFinishButton && _isLastStep;
+
+    protected override void OnInitialized()
+    {
+        ThrowIfEmpty(UniqueId);
+        ThrowIfEmpty(Model);
+        ThrowIfEmpty(ChildContent);
+
+        DisableNextButton = false;
+        DisablePreviousButton = false;
+        Elevation = 1;
+        ButtonVariant = Variant.Filled;
+        ShowFinishButton = true;
+        Title = "";
+        Description = "";
+
+        base.OnInitialized();
+
+        static void ThrowIfEmpty<P>(P value, [CallerArgumentExpression("value")] string valueExpression = "")
+        {
+            if (value is string str)
+            {
+                if (!string.IsNullOrWhiteSpace(str))
+                {
+                    return;
+                }
+            }
+            else
+            {
+                if (value is not null)
+                {
+                    return;
+                }
+            }
+
+            throw new InvalidOperationException($"{nameof(WizardForm<T>)} requires a {valueExpression} parameter.");   
+        }
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender && _steps.Count > 0)
+        {
+            Select(1);
+
+            _loadCachedState();
+        }
+    }
+
+    [Parameter]
+    public string UniqueId { get; set; } = default!;
+
+    [Parameter]
+    public T Model { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback<StepChangedEventArgs> StepChanging { get; set; }
+
+    [Parameter]
+    public EventCallback<T> WizardFinished { get; set; }
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; } = default!;
+
+    protected string Classname => new CssBuilder("mud-wizard")
+        .AddClass(Class)
+        .Build();
+
+    [Parameter]
+    public bool DisableNextButton { get; set; }
+
+    [Parameter]
+    public bool DisablePreviousButton { get; set; }
+
+    [Parameter]
+    public int Elevation { set; get; }
+
+    [Parameter]
+    public Variant ButtonVariant { get; set; }
+
+    [Parameter]
+    public string Title { get; set; }
+
+    [Parameter]
+    public string Description { get; set; }
+
+    [Parameter]
+    public int CurrentStep { get; set; }
+
+    [Parameter]
+    public bool ShowFinishButton { get; set; }
+
+
+    private async Task _onNext()
+    {
+        if (!_editForm.Validate(_steps[CurrentStep - 1].Properties))
+        {
+            return;
+        }
+
+        await Select(CurrentStep + 1);
+    }
+
+    private async Task _onPrevious()
+    {
+        await Select(CurrentStep - 1);
+    }
+
+    private async Task _onFinish()
+    {
+        await WizardFinished.InvokeAsync(Model);
+    }
+
+    private async Task _loadCachedState()
+    {
+        // Load the cached state by the current unique id
+    }
+
+
+    public int AddStep(StepModel step)
+    {
+        _steps.Add(step);
+        return _steps.Count;
+    }
+
+    public async Task Select(int step)
+    {
+        if (step == CurrentStep)
+        {
+            return;
+        }
+
+        if (step <= 0 || step > _steps.Count)
+        {
+            return;
+        }
+
+        var eventArgs = new StepChangedEventArgs()
+        {
+            NewStep = step,
+            CurrentStep = CurrentStep
+        };
+
+        StepChanging.InvokeAsync(eventArgs);
+
+        if (eventArgs.Cancel)
+        {
+            return;
+        }
+
+        if (eventArgs.NewStep > 0 && eventArgs.NewStep <= _steps.Count)
+        {
+            animationClass = "animate-fade-out";
+            await Task.Delay(200);
+            CurrentStep = eventArgs.NewStep;
+            animationClass = "animate-fade-in";
+        }
+
+        StateHasChanged();
+    }
+
+    public class StepChangedEventArgs
+    {
+        public int NewStep { get; set; }
+        public int CurrentStep { get; internal set; }
+        public bool Cancel { get; set; }
+    }
+}

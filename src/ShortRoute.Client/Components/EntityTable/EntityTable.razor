@@ -86,12 +86,16 @@
                             }
                             else
                             {
-                                <MudTableSortLabel Enabled="Context.ServerContext?.EnableSort ?? false" T="TEntity" SortLabel="@field.SortLabel">@field.DisplayName</MudTableSortLabel>
+                                <MudTableSortLabel Enabled="Context.ServerContext?.EnableSort ?? false && !string.IsNullOrEmpty(field.SortLabel)"
+                                                   T="TEntity" SortLabel="@field.SortLabel">@field.DisplayName</MudTableSortLabel>
                             }
                         </MudTh>
                     }
                 }
-                <MudTh>@L["Actions"]</MudTh>
+                @if (HasActions)
+                {
+                    <MudTh>@L["Actions"]</MudTh>
+                }
             </HeaderContent>
 
             <RowTemplate>
@@ -112,44 +116,37 @@
                         }
                     </MudTd>
                 }
-                <MudTd DataLabel="Actions">
-                    @if (ActionsContent is not null)
-                    {
-                        @ActionsContent(context)
-                    }
-                    else if (HasActions)
-                    {
-                        @*<MudIconButton Icon="@Icons.Material.Outlined.RemoveRedEye" Color="Color.Inherit" Edge="Edge.Start" Link="/" />*@
-                        @if (CanUpdateEntity(context))
-                        {
-                            <MudIconButton Icon="@Icons.Material.Outlined.Edit" Class="me-1" OnClick="() => InvokeModal(context)" />
-                        }
-                        @if (CanDeleteEntity(context))
-                        {
-                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Class="me-1 red-on-hover" OnClick="() => Delete(context)" />
-                        }
 
-                        @if (ExtraActions is not null)
+                @if (HasActions || ActionsContent is not null)
+                {
+                    <MudTd DataLabel="Actions">
+                        @if (ActionsContent is not null)
                         {
-                            <MudMenu Label="@L["Actions"]" Variant="Variant.Filled" DisableElevation="true"
-                                EndIcon="@Icons.Filled.KeyboardArrowDown" IconColor="Color.Secondary" Direction="Direction.Left"
-                                OffsetX="true">
-                                @if (ExtraActions is not null)
-                                {
-                                    @ExtraActions(context)
-                                }
-                            </MudMenu>   
+                            @ActionsContent(context)
                         }
-                    }
-                    else
-                    {
-                        <MudButton Variant="Variant.Filled" DisableElevation="true"
-                            StartIcon="@Icons.Material.Filled.DoNotTouch" IconColor="Color.Secondary" Size="Size.Small"
-                        Color="Color.Surface">
-                            @L["No Allowed Actions"]
-                        </MudButton>
-                    }
-                </MudTd>
+                        else
+                        {
+                            @*<MudIconButton Icon="@Icons.Material.Outlined.RemoveRedEye" Color="Color.Inherit" Edge="Edge.Start" Link="/" />*@
+                            @if (CanUpdateEntity(context))
+                            {
+                                <MudIconButton Icon="@Icons.Material.Outlined.Edit" Class="me-1" OnClick="() => InvokeModal(context)" />
+                            }
+                            @if (CanDeleteEntity(context))
+                            {
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Class="me-1 red-on-hover" OnClick="() => Delete(context)" />
+                            }
+
+                            @if (HasExtraActions && ExtraActions is not null)
+                            {
+                                <MudMenu Label="@L["Actions"]" Variant="Variant.Filled" DisableElevation="true"
+                                         EndIcon="@Icons.Filled.KeyboardArrowDown" IconColor="Color.Secondary" Direction="Direction.Left"
+                                         OffsetX="true">
+                                    @ExtraActions(context)
+                                </MudMenu>   
+                            }
+                        }
+                    </MudTd>
+                }
             </RowTemplate>
 
             <PagerContent>

@@ -20,7 +20,7 @@ public class CreateUpdateUserModel : BaseCreateUpdateModel<string>
 
     public string Password { get; set; } = null!;
     public string ConfirmPassword { get; set; } = null!;
-    public int? TenantId { get; set; }
+    public string? TenantId { get; set; }
 
     #endregion
 

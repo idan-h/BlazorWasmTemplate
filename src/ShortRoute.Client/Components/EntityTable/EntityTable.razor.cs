@@ -69,7 +69,11 @@ public partial class EntityTable<TEntity, TId, TRequest, TCreate, TUpdate>
 
     private Sort? _lastSort;
     private int? _lastPage;
-    private string? _lastPageLastId;
+    private TableIdPaginationData _lastIdData = new();
+    //private Dictionary<int, string?> _lastIdByPage = new()
+    //{
+    //    [0] = null
+    //};
 
     protected override async Task OnInitializedAsync()
     {
@@ -98,7 +102,8 @@ public partial class EntityTable<TEntity, TId, TRequest, TCreate, TUpdate>
         return action.ToLower() == "true" || await AuthService.HasPermissionAsync(state.User, action);
     }
 
-    private bool HasActions => _canUpdate || _canDelete || (Context.HasExtraActionsFunc?.Invoke() ?? false);
+    private bool HasActions => _canUpdate || _canDelete || HasExtraActions;
+    private bool HasExtraActions => Context.HasExtraActionsFunc?.Invoke() == true;
     private bool CanUpdateEntity(TEntity entity) => _canUpdate && (Context.CanUpdateEntityFunc is null || Context.CanUpdateEntityFunc(entity));
     private bool CanDeleteEntity(TEntity entity) => _canDelete && (Context.CanDeleteEntityFunc is null || Context.CanDeleteEntityFunc(entity));
 
@@ -212,37 +217,19 @@ public partial class EntityTable<TEntity, TId, TRequest, TCreate, TUpdate>
         {
             orderings = new[] { state.SortLabel + (state.SortDirection == SortDirection.Descending ? "*" : "") };
         }
-
         _lastSort = new Sort { Fields = orderings ?? Enumerable.Empty<string>() };
 
-        IPagination? pagination = null;
-        if (Context.ServerContext?.PaginationType == typeof(IdPagination))
+        var lastIdData = GetCurrentPageLastId(orderings, state);
+
+        var pagination = new Pagination
         {
-            string? currentPageLastId = null;
-            if (_entityList?.Any() == true && Context.ServerContext?.IdFunc is not null)
-            {
-                var entity = _entityList.Last();
-                currentPageLastId = Context.ServerContext.IdFunc.Invoke(entity)?.ToString();
+            PageNum = state.Page + 1,
+            LastId = lastIdData.Id,
+            LastIdDesc = lastIdData.Desc,
+            PageSize = state.PageSize
+        };
 
-            }
-
-            pagination = new IdPagination
-            {
-                LastId = state.Page < _lastPage ? _lastPageLastId : currentPageLastId,
-                PageSize = state.PageSize
-            };
-
-            _lastPage = state.Page;
-            _lastPageLastId = currentPageLastId;
-        }
-        else if (Context.ServerContext?.PaginationType == typeof(OffsetPagination))
-        {
-            pagination = new OffsetPagination
-            {
-                PageNum = state.Page + 1,
-                PageSize = state.PageSize
-            };
-        }
+        _lastPage = state.Page;
 
         //if (!Context.AllColumnsChecked)
         //{
@@ -278,6 +265,63 @@ public partial class EntityTable<TEntity, TId, TRequest, TCreate, TUpdate>
             Filter = new TextFilter { Text = SearchString },
             Sort = _lastSort,
         };
+    }
+    private TableIdPaginationData GetCurrentPageLastId(string[]? orderings, TableState state)
+    {
+        if (orderings?.Any() == true || state.Page <= 0)
+        {
+            _lastPage = null;
+            return new();
+        }
+
+        var isDesc = false;
+        TEntity? entity = default;
+
+        // Next page
+        if (state.Page - 1 == _lastPage)
+        {
+            if (_entityList?.Any() == true)
+            {
+                entity = _entityList.Last();
+            }
+        }
+        // Previous page
+        else if (state.Page + 1 == _lastPage)
+        {
+            if (_entityList?.Any() == true)
+            {
+                entity = _entityList.First();
+                isDesc = true;
+            }
+        }
+        // Current page
+        else if (state.Page == _lastPage)
+        {
+            return _lastIdData;
+        }
+        // Last page
+        else
+        {
+            return new()
+            {
+                Id = "_"
+            };
+        }
+
+        var idFunc = Context.ServerContext?.IdFunc;
+
+        if (entity is null || idFunc is null)
+        {
+            return new();
+        }
+
+        _lastIdData = new()
+        {
+            Id = idFunc.Invoke(entity)?.ToString(),
+            Desc = isDesc
+        };
+
+        return _lastIdData;
     }
 
     private async Task InvokeModal(TEntity? entity = default)
@@ -374,5 +418,11 @@ public partial class EntityTable<TEntity, TId, TRequest, TCreate, TUpdate>
 
             await ReloadDataAsync();
         }
+    }
+
+    private class TableIdPaginationData
+    {
+        public string? Id { get; set; }
+        public bool Desc { get; set; }
     }
 }

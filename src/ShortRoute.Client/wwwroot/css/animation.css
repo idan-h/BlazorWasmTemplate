@@ -1,0 +1,158 @@
+﻿
+@keyframes rightin {
+    from {
+        right: -100px;
+        opacity: 0
+    }
+
+    to {
+        right: 0;
+        opacity: 1
+    }
+}
+@keyframes rightout {
+    from {
+        right: 0;
+        opacity: 1
+    }
+
+    to {
+        right: -100px;
+        opacity: 0
+    }
+}
+
+@keyframes leftin {
+    from {
+        left: -100px;
+        opacity: 0
+    }
+
+    to {
+        left: 0;
+        opacity: 1
+    }
+}
+@keyframes leftout {
+    from {
+        left: 0;
+        opacity: 1
+    }
+
+    to {
+        left: -100px;
+        opacity: 0
+    }
+}
+
+@keyframes bottomin {
+    from {
+        bottom: -100px;
+        opacity: 0
+    }
+
+    to {
+        bottom: 0;
+        opacity: 1
+    }
+}
+@keyframes bottomout {
+    from {
+        bottom: 0;
+        opacity: 1
+    }
+
+    to {
+        bottom: -100px;
+        opacity: 0
+    }
+}
+
+@keyframes topin {
+    from {
+        top: -100px;
+        opacity: 0
+    }
+
+    to {
+        top: 0;
+        opacity: 1
+    }
+}
+@keyframes topout {
+    from {
+        top: 0;
+        opacity: 1
+    }
+
+    to {
+        top: -100px;
+        opacity: 0
+    }
+}
+
+@keyframes in {
+    from {
+        opacity: 0
+    }
+
+    to {
+        opacity: 1
+    }
+}
+@keyframes out {
+    from {
+        opacity: 1
+    }
+
+    to {
+        opacity: 0
+    }
+}
+
+
+.animate-right-in {
+    position: relative;
+    animation: rightin 0.5s;
+}
+.animate-right-out {
+    position: relative;
+    animation: rightout 0.5s;
+}
+
+.animate-left-in {
+    position: relative;
+    animation: leftin 0.5s;
+}
+.animate-left-out {
+    position: relative;
+    animation: leftout 0.5s;
+}
+
+.animate-bottom-in {
+    position: relative;
+    animation: bottomin 0.5s;
+}
+.animate-bottom-out {
+    position: relative;
+    animation: bottomout 0.5s;
+}
+
+.animate-top-in {
+    position: relative;
+    animation: topin 0.5s;
+}
+.animate-top-out {
+    position: relative;
+    animation: topout 0.5s;
+}
+
+.animate-fade-in {
+    position: relative;
+    animation: in 0.5s;
+}
+
+.animate-fade-out {
+    position: relative;
+    animation: out 0.5s;
+}

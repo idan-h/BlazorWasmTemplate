@@ -1,0 +1,54 @@
+﻿@page "/"
+@using ShortRoute.Client.Infrastructure.ApiClient.v1
+@using ShortRoute.Client.Models.Generic
+@using ShortRoute.Contracts.Dtos.Example
+@attribute [Authorize(Permissions.ReadUsers)]
+
+@inject IStringLocalizer<SharedResource> L
+
+<FshTitle Title="@L["Example"]" Description="@L["Manage Examples"]" />
+
+<EntityTable TEntity="ExampleDto" TId="string" TRequest="None" TCreate="None" TUpdate="None" Context="@Context">
+    <EditFormContent>
+
+    </EditFormContent>
+</EntityTable>
+
+
+@code {
+    [Inject]
+    private IExampleClient ExampleClient { get; set; } = default!;
+
+    public EntityServerTableContext<ExampleDto, string, None, None, None> Context = default!;
+
+    protected override void OnInitialized()
+    {
+        Context = new(
+            entityName: L["Example"],
+            entityNamePlural: L["Examples"],
+            searchPermission: Permissions.Example,
+            createPermission: Permissions.Example,
+            fields: new()
+            {
+                new(x => x.Id, L["Id"], "Id"),
+                new(x => x.String, L["String"], "ExampleString"),
+                new(x => x.Created, L["Created"], "Created"),
+            },
+            idFunc: u => u.Id!,
+            searchFunc: async filter =>
+            {
+                var response = await ExampleClient.Example(
+                    filter?.Pagination?.ToString(),
+                    filter?.Filter?.Text,
+                    filter?.Sort?.ToString());
+
+                return new PaginationResponse<ExampleDto>
+                {
+                    Data = response.ExampleEntities.ToList(),
+                    TotalCount = response.TotalCount,
+                };
+            },
+            getDefaultsFunc: null,
+            createFunc: async command => await ExampleClient.ExampleCreate());
+    }
+}

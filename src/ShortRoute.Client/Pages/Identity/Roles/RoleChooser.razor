@@ -1,0 +1,49 @@
+﻿@using ShortRoute.Client.Models.Roles
+@using ShortRoute.Contracts.Dtos.Authentication
+
+@inject IStringLocalizer<SharedResource> L
+
+@if (!_loaded)
+{
+    <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+}
+else
+{
+    <MudTable Hover="true"  Elevation="25" Items="_userRolesList" Filter="new Func<RoleModel, bool>(Search)">
+        <ToolBarContent>
+            <MudTextField @bind-Value="_searchString" Immediate="true" FullWidth=false
+                Placeholder="@L["Search For Roles"]" Adornment="Adornment.End"
+                AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0 mb-3">
+            </MudTextField>
+        </ToolBarContent>
+        <HeaderContent>
+            <MudTh>
+                <MudTableSortLabel SortBy="new Func<RoleModel, object?>(x => x.Dto.RoleName)">@L["Role Name"]
+                </MudTableSortLabel>
+            </MudTh>
+            <MudTh>
+                <MudTableSortLabel SortBy="new Func<RoleModel, object?>(x => x.Dto.Description)">@L["Description"]
+                </MudTableSortLabel>
+            </MudTh>
+            <MudTh>
+                <MudTableSortLabel SortBy="new Func<RoleModel, object>(x => x.Enabled)">@L["Status"]
+                </MudTableSortLabel>
+            </MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="@L["Role Name"]">
+                <MudHighlighter Text="@L[context.Dto.RoleName]" HighlightedText="@_searchString" />
+            </MudTd>
+            <MudTd DataLabel="@L["Description"]">
+                <MudHighlighter Text="@L[context.Dto.Description ?? ""]" HighlightedText="@_searchString" />
+            </MudTd>
+            <MudTd DataLabel="Role">
+                <MudCheckBox @bind-Checked="@context.Enabled" Disabled="@IsReadonly" Color="Color.Secondary">
+                </MudCheckBox>
+            </MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <TablePager />
+        </PagerContent>
+    </MudTable>
+}

@@ -8,57 +8,70 @@ using MudBlazor;
 using ShortRoute.Client.Infrastructure.Auth.Extensions;
 using ShortRoute.Contracts.Dtos.Authentication;
 using ShortRoute.Client.Infrastructure.ApiClient.v1;
-using ShortRoute.Contracts.Auth;
+using ShortRoute.Contracts.Enums;
 using ShortRoute.Client.Models.Roles;
 
 namespace ShortRoute.Client.Pages.Identity.Roles;
 
 public partial class RolePermissions
 {
-    [Parameter]
-    public string Id { get; set; } = default!; // from route
-    [CascadingParameter]
-    protected Task<AuthenticationState> AuthState { get; set; } = default!;
-    [Inject]
-    protected IAuthorizationService AuthService { get; set; } = default!;
     [Inject]
     protected IRolesClient RolesClient { get; set; } = default!;
 
-    private Dictionary<string, List<PermissionModel>> _groupedRoleClaims = default!;
+    [Parameter]
+    public bool IsReadonly { get; set; }
 
-    public string _title = string.Empty;
-    public string _description = string.Empty;
+    [Parameter]
+    public EventCallback<List<string>> ValueChanged { get; set; }
+
+    [Parameter]
+    public List<string> Value
+    {
+        get => _value;
+        set
+        {
+            if (value == _value)
+            {
+                return;
+            }
+
+            _value = value;
+
+            ValueChanged.InvokeAsync(_value);
+        }
+    }
+    private List<string> _value = new();
+
+    private Dictionary<string, List<PermissionModel>> _groupedRoleClaims = default!;
 
     private string _searchString = string.Empty;
 
-    private bool _canEditRoleClaims;
-    private bool _canSearchRoleClaims;
     private bool _loaded;
-
 
     protected override async Task OnInitializedAsync()
     {
-        var state = await AuthState;
-        _canEditRoleClaims = await AuthService.HasPermissionAsync(state.User, Permissions.UpdateRoles);
-        _canSearchRoleClaims = await AuthService.HasPermissionAsync(state.User, Permissions.ReadRoles);
+        var response = await ApiHelper.ExecuteClientCall(() => RolesClient.PermissionsGetList(), Snackbar);
 
-        var role = await ApiHelper.ExecuteClientCall(() => RolesClient.RolesGetSingle(Id), Snackbar);
-        var permissions = await ApiHelper.ExecuteClientCall(() => RolesClient.PermissionsGetList(), Snackbar);
-
-        if (permissions is not null && role is not null && role.PermissionNames?.Any() is true)
+        if (response is not null)
         {
-            _title = string.Format(L["{0} Permissions"], role.RoleName);
-            _description = string.Format(L["Manage {0} Role Permissions"], role.RoleName);
-
-            _groupedRoleClaims = permissions
+            _groupedRoleClaims = response.Permissions
                 .GroupBy(p => p.GroupName!)
                 .ToDictionary(g => g.Key, g => g.Select(p =>
                 {
-                    return new PermissionModel(p, role.PermissionNames.Contains(p.PermissionName!));
+                    return new PermissionModel(p, Value.Contains(p.PermissionName!), OnPermissionStatusChanged);
                 }).ToList());
         }
 
         _loaded = true;
+    }
+
+    private void OnPermissionStatusChanged()
+    {
+        Value = _groupedRoleClaims.Values
+            .SelectMany(a => a)
+            .Where(a => a.Enabled)
+            .Select(x => x.Dto.PermissionName!)
+            .ToList();
     }
 
     private Color GetGroupBadgeColor(int selected, int all)
@@ -70,25 +83,6 @@ public partial class RolePermissions
             return Color.Success;
 
         return Color.Info;
-    }
-
-    private async Task SaveAsync()
-    {
-        var allPermissions = _groupedRoleClaims.Values.SelectMany(a => a);
-        var selectedPermissions = allPermissions.Where(a => a.Enabled);
-        var dto = new RoleDto()
-        {
-            RoleName = Id,
-            PermissionNames = selectedPermissions.Where(x => x.Enabled).Select(x => x.Dto.PermissionName).ToList()!,
-        };
-
-        if (await ApiHelper.ExecuteClientCall(
-            () => RolesClient.RolesUpdate(dto),
-            Snackbar,
-            successMessage: L["Updated Permissions."]))
-        {
-            Navigation.NavigateTo("/roles");
-        }
     }
 
     private bool Search(PermissionModel permission)

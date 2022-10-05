@@ -25,15 +25,12 @@ public class EntityServerTableContext<TEntity, TId, TCreateUpdateRequest, TCreat
 
     public bool EnableSort { get; }
 
-    public Type? PaginationType { get; }
-
     public EntityServerTableContext(
         List<EntityField<TEntity>> fields,
         Func<GeneralFilter, Task<PaginationResponse<TEntity>>> searchFunc,
         Func<GeneralFilter, Task<HttpContent>>? exportFunc = null,
         bool enableAdvancedSearch = false,
         bool enableSort = true,
-        Type? paginationType = null,
 
         Func<TEntity, TId>? idFunc = null,
         Func<Task<TCreateUpdateRequest>>? getDefaultsFunc = null,
@@ -77,6 +74,5 @@ public class EntityServerTableContext<TEntity, TId, TCreateUpdateRequest, TCreat
         ExportFunc = exportFunc;
         EnableAdvancedSearch = enableAdvancedSearch;
         EnableSort = enableSort;
-        PaginationType = paginationType;
     }
 }

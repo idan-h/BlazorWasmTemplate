@@ -7,18 +7,24 @@ using MudBlazor;
 using ShortRoute.Client.Infrastructure.Auth.Extensions;
 using ShortRoute.Client.Infrastructure.ApiClient.v1;
 using ShortRoute.Contracts.Dtos.Authentication;
-using ShortRoute.Contracts.Auth;
+using ShortRoute.Contracts.Enums;
 using ShortRoute.Contracts.Queries.Common;
 using ShortRoute.Contracts.Queries.Authentication.Users;
 using ShortRoute.Contracts.Commands.Authentication.Users;
 using ShortRoute.Client.Models.Users;
 using ShortRoute.Client.Mappings.Users;
 using ShortRoute.Client.Shared;
+using ShortRoute.Contracts.Responses.Authentication.Users;
+using ShortRoute.Client.Pages.Identity.Roles;
+using ShortRoute.Contracts.Extensions;
 
 namespace ShortRoute.Client.Pages.Identity.Users;
 
 public partial class Users
 {
+    [Parameter]
+    public string? TenantId { get; set; }
+
     [CascadingParameter]
     protected Task<AuthenticationState> AuthState { get; set; } = default!;
     [Inject]
@@ -29,21 +35,20 @@ public partial class Users
 
     protected EntityServerTableContext<UserDto, string, CreateUpdateUserModel, CreateUserCommand, UpdateUserCommand> Context { get; set; } = default!;
 
-    private bool _canExportUsers;
-    private bool _canViewRoles;
+    private bool _canUpdate;
+    private bool _canChooseTenant;
 
     private bool _passwordVisibility;
     private InputType _passwordInput = InputType.Password;
     private string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
 
+    private RoleChooser _userRoles = default!;
 
     protected override async Task OnInitializedAsync()
     {
         var user = (await AuthState).User;
-        _canExportUsers = await AuthService.HasPermissionAsync(user, Permissions.ReadUsers);
-        _canViewRoles = await AuthService.HasPermissionAsync(user, Permissions.ReadUsers);
-
-        // add disabling users
+        _canUpdate = await AuthService.HasPermissionAsync(user, Permissions.UpdateUsers);
+        _canChooseTenant = string.IsNullOrEmpty(user.GetTenant());
 
         Context = new(
             entityName: L["User"],
@@ -59,6 +64,7 @@ public partial class Users
                 new(user => user.Email, L["Email"]),
                 new(user => user.TenantName, L["Tenant"]),
                 new(user => user.IsActive, L["Active"], Type: typeof(bool)),
+                new(user => user.IsTenantAdmin, L["IsAdmin"], Type: typeof(bool)),
             },
             idFunc: u => u.Id!,
             searchFunc: async filter =>
@@ -66,7 +72,8 @@ public partial class Users
                 var response = await UsersClient.UsersGetList(
                     filter?.Pagination?.ToString(),
                     filter?.Filter?.Text,
-                    filter?.Sort?.ToString());
+                    filter?.Sort?.ToString(),
+                    TenantId);
 
                 return new PaginationResponse<UserDto>
                 {
@@ -80,16 +87,9 @@ public partial class Users
             updateFunc: async (_, command) => await UsersClient.UsersUpdate(command),
             deleteFunc: async id => await UsersClient.UsersDelete(id),
 
-            hasExtraActionsFunc: () => true,
-            enableSort: false,
-            paginationType: typeof(OffsetPagination));
+            hasExtraActionsFunc: () => _canUpdate,
+            enableSort: false);
     }
-
-    private void ViewProfile(in string userId) =>
-        Navigation.NavigateTo($"/users/{userId}/profile");
-
-    private void ManageRoles(in string userId) =>
-        Navigation.NavigateTo($"/users/{userId}/roles");
 
     private void TogglePasswordVisibility()
     {
@@ -108,17 +108,37 @@ public partial class Users
         Context.AddEditModal.ForceRender();
     }
 
-    private async Task DisableUser(CreateUpdateUserModel user)
+    private void TenantsAutocompleteValueChanged(string tenantId, CreateUpdateUserModel model)
+    {
+        if (tenantId == model.TenantId)
+        {
+            return;
+        }
+
+        model.TenantId = tenantId;
+        _ = _userRoles?.Refresh();
+    }
+
+    private async Task ChangeUserActivation(string id, bool isActive, Action onSuccess)
     {
         if (await ApiHelper.ExecuteClientCall(() => UsersClient.UsersChangeActive(new ChangeUserActiveCommand
         {
-            UserId = user.Id!,
-            IsActive = !user.IsActive
+            UserId = id,
+            IsActive = !isActive
         }), Snackbar))
         {
-            user.IsActive = !user.IsActive;
-            // Context.AddEditModal.Close();
-            Context.AddEditModal.ForceRender();
+            onSuccess.Invoke();
         }
+    }
+
+    private async Task<IEnumerable<RoleDto>> GetRolesToUser(string? tenantId)
+    {
+        if (await ApiHelper.ExecuteClientCall(() => UsersClient.UsersRolesGet(tenantId), Snackbar)
+                is GetUsersRolesResponse response)
+        {
+            return response.Roles;
+        }
+
+        return Enumerable.Empty<RoleDto>();
     }
 }

@@ -5,7 +5,7 @@ using ShortRoute.Contracts.Dtos.Authentication;
 
 namespace ShortRoute.Client.Mappings.Users;
 
-[Mapper]
+[Mapper(UseDeepCloning = true)]
 public static partial class UsersMapper
 {
     public static partial CreateUserCommand ToCreateCommand(this CreateUpdateUserModel model);

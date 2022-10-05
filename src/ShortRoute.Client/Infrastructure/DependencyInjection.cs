@@ -10,7 +10,7 @@ using ShortRoute.Client.Infrastructure.ApiClient.v1;
 using Refit;
 using ShortRoute.Client.Infrastructure.ApiClient.Base;
 using ShortRoute.Client.Infrastructure.Auth.Enums;
-using ShortRoute.Contracts.Auth;
+using ShortRoute.Contracts.Enums;
 
 namespace ShortRoute.Client.Infrastructure;
 
