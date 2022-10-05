@@ -3,7 +3,7 @@
 @using MudBlazor.Utilities
 @using ShortRoute.Client.Components.EditForm
 
-@typeparam T
+@typeparam T where T : new()
 
 @inherits MudComponentBase
 @implements IWizardForm
@@ -11,7 +11,7 @@
 @inject IStringLocalizer<SharedResource> L
 
 <CascadingValue Value="this" IsFixed="true">
-    <FluentEditForm @ref="_editForm" Model="Model">
+    <FluentEditForm @ref="_editForm" Model="_model">
         <MudCard @attributes="UserAttributes" 
                  Class="@Classname" 
                  Style="@Style" 
@@ -25,7 +25,7 @@
 
             <MudCardContent Style="overflow: hidden" Class="container">
                 <div class="@animationClass">
-                    @ChildContent
+                    @ChildContent(_model)
                 </div>
             </MudCardContent>
 
@@ -67,9 +67,14 @@
 
 @code {
 
+    private T _model = new();
     private List<StepModel> _steps = new();
     private FluentEditForm<T> _editForm;
     private string animationClass;
+
+    private const string cachePrefix = "wizardForm~";
+    private string _itemCacheKey => cachePrefix + UniqueId;
+    private string _stepCacheKey => _itemCacheKey + "_lastStep";
 
     private bool _isLastStep => CurrentStep > _steps.Count - 1;
     private bool _isPreviousDisabled => DisablePreviousButton || CurrentStep <= 1;
@@ -79,7 +84,6 @@
     protected override void OnInitialized()
     {
         ThrowIfEmpty(UniqueId);
-        ThrowIfEmpty(Model);
         ThrowIfEmpty(ChildContent);
 
         DisableNextButton = false;
@@ -113,21 +117,18 @@
         }
     }
 
-    protected override void OnAfterRender(bool firstRender)
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender && _steps.Count > 0)
         {
-            Select(1);
+            await Select(1);
 
-            _loadCachedState();
+            _loadCache();
         }
     }
 
     [Parameter]
     public string UniqueId { get; set; } = default!;
-
-    [Parameter]
-    public T Model { get; set; } = default!;
 
     [Parameter]
     public EventCallback<StepChangedEventArgs> StepChanging { get; set; }
@@ -136,7 +137,7 @@
     public EventCallback<T> WizardFinished { get; set; }
 
     [Parameter]
-    public RenderFragment ChildContent { get; set; } = default!;
+    public RenderFragment<T> ChildContent { get; set; } = default!;
 
     protected string Classname => new CssBuilder("mud-wizard")
         .AddClass(Class)
@@ -166,6 +167,9 @@
     [Parameter]
     public bool ShowFinishButton { get; set; }
 
+    [Inject]
+    private ILocalStorageService _localStorage { get; set; } = default!;
+
 
     private async Task _onNext()
     {
@@ -174,22 +178,43 @@
             return;
         }
 
+        await _localStorage.SetItemAsync(_itemCacheKey, _model);
+
         await Select(CurrentStep + 1);
+        await _setStepCache(CurrentStep);
     }
 
     private async Task _onPrevious()
     {
         await Select(CurrentStep - 1);
+        await _setStepCache(CurrentStep);
     }
 
     private async Task _onFinish()
     {
-        await WizardFinished.InvokeAsync(Model);
+        await WizardFinished.InvokeAsync(_model);
+
+        await _localStorage.RemoveItemAsync(_itemCacheKey);
+        await _localStorage.RemoveItemAsync(_stepCacheKey);
     }
 
-    private async Task _loadCachedState()
+    private async Task _loadCache()
     {
-        // Load the cached state by the current unique id
+        var cached = await _localStorage.GetItemAsync<T>(_itemCacheKey);
+        var step = await _localStorage.GetItemAsync<int>(_stepCacheKey);
+        if (cached is not null)
+        {
+            _model = cached;
+        }
+        if (step > 0)
+        {
+            Select(step);
+        }
+        StateHasChanged();
+    }
+    private async Task _setStepCache(int step)
+    {
+        await _localStorage.SetItemAsync(_stepCacheKey, step);
     }
 
 

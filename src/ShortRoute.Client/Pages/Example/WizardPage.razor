@@ -6,15 +6,15 @@
 
 <h3>WizardForm</h3>
 
-<WizardForm Model="Data" UniqueId="example" Style="width: 80%">
+<WizardForm T="WizardData" UniqueId="example" Style="width: 80%">
 
     <WizardStep Title="Step 1" Description="This is the first step">
         <div class="row">
             <div class="col-md-6">
-                <WizardTextField For="@(() => Data.Name)" @bind-Value="Data.Name" Label="@L["Name"]" />
+                <WizardTextField For="@(() => context.Name)" @bind-Value="context.Name" Label="@L["Name"]" />
             </div>
             <div class="col-md-6">
-                <WizardTextField For="@(() => Data.Number)" @bind-Value="Data.Number" Label="@L["Number"]" />
+                <WizardTextField For="@(() => context.Number)" @bind-Value="context.Number" Label="@L["Number"]" />
             </div>
         </div>
     </WizardStep>
@@ -22,10 +22,10 @@
     <WizardStep Title="Step 2" Description="This is the second step">
         <div class="row">
             <div class="col-md-6">
-                <WizardTextField For="@(() => Data.Address)" @bind-Value="Data.Address" Label="@L["Address"]" />
+                <WizardTextField For="@(() => context.Address)" @bind-Value="context.Address" Label="@L["Address"]" />
             </div>
             <div class="col-md-6">
-                <WizardTextField For="@(() => Data.Gender)" @bind-Value="Data.Gender" Label="@L["Gender"]" />
+                <WizardTextField For="@(() => context.Gender)" @bind-Value="context.Gender" Label="@L["Gender"]" />
             </div>
         </div>
     </WizardStep>
@@ -33,11 +33,11 @@
     <WizardStep Title="Step 3" Description="This is the third step">
         <div class="row">
             <div class="col-md-6">
-                <WizardTextField For="@(() => Data.Currency)" @bind-Value="Data.Currency" Label="@L["Currency"]" />
+                <WizardTextField For="@(() => context.Currency)" @bind-Value="context.Currency" Label="@L["Currency"]" />
             </div>
 
             <div class="col-md-6">
-                <WizardTextField For="@(() => Data.Coin)" @bind-Value="Data.Coin" Label="@L["Coin"]" />
+                <WizardTextField For="@(() => context.Coin)" @bind-Value="context.Coin" Label="@L["Coin"]" />
             </div>
         </div>
     </WizardStep>
@@ -45,11 +45,11 @@
     <WizardStep Title="Step 4" Description="This is the fourth step">
         <div class="row">
             <div class="col-md-6">
-                <WizardTextField For="@(() => Data.Amount)" @bind-Value="Data.Amount" Label="@L["Amount"]" />
+                <WizardTextField For="@(() => context.Amount)" @bind-Value="context.Amount" Label="@L["Amount"]" />
             </div>
 
             <div class="col-md-6">
-                <WizardTextField For="@(() => Data.Age)" @bind-Value="Data.Age" Label="@L["Age"]" />
+                <WizardTextField For="@(() => context.Age)" @bind-Value="context.Age" Label="@L["Age"]" />
             </div>
         </div>
     </WizardStep>
@@ -57,8 +57,6 @@
 </WizardForm>
 
 @code {
-    WizardData Data = new();
-
     public class WizardData
     {
         public string Name { get; set; }
